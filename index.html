@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Tarjeta de Fidelidad</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mi Tarjeta">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-950 text-white min-h-screen flex flex-col items-center justify-center p-4 selection:bg-yellow-500 selection:text-black">
+
+  <main class="w-full max-w-sm bg-gray-900 border border-gray-800 rounded-3xl p-6 shadow-2xl flex flex-col items-center">
+    
+    <header class="text-center mb-6">
+      <span class="text-xs uppercase tracking-widest text-yellow-400 font-semibold">Club Exclusivo</span>
+      <h1 class="text-2xl font-bold mt-1">Cafetería Central</h1>
+      <p class="text-sm text-gray-400 mt-1">Acumula 6 sellos y obtén un consumo de regalo</p>
+    </header>
+
+    <section class="grid grid-cols-3 gap-3 w-full mb-6">
+      <div class="h-20 rounded-2xl bg-yellow-500/10 border-2 border-yellow-500 flex flex-col items-center justify-center">
+        <span class="text-2xl">☕</span>
+        <span class="text-[10px] text-yellow-400 font-bold mt-1">LISTO</span>
+      </div>
+      <div class="h-20 rounded-2xl bg-yellow-500/10 border-2 border-yellow-500 flex flex-col items-center justify-center">
+        <span class="text-2xl">☕</span>
+        <span class="text-[10px] text-yellow-400 font-bold mt-1">LISTO</span>
+      </div>
+      <div class="h-20 rounded-2xl bg-gray-800/50 border-2 border-dashed border-gray-700 flex flex-col items-center justify-center text-gray-500">
+        <span class="text-lg font-bold">3</span>
+      </div>
+      <div class="h-20 rounded-2xl bg-gray-800/50 border-2 border-dashed border-gray-700 flex flex-col items-center justify-center text-gray-500">
+        <span class="text-lg font-bold">4</span>
+      </div>
+      <div class="h-20 rounded-2xl bg-gray-800/50 border-2 border-dashed border-gray-700 flex flex-col items-center justify-center text-gray-500">
+        <span class="text-lg font-bold">5</span>
+      </div>
+      <div class="h-20 rounded-2xl bg-gray-800/50 border-2 border-dashed border-yellow-500/40 flex flex-col items-center justify-center text-yellow-500/60">
+        <span class="text-2xl">🎁</span>
+        <span class="text-[10px] font-bold mt-1">PREMIO</span>
+      </div>
+    </section>
+
+    <footer class="w-full bg-gray-950/60 border border-gray-800/80 rounded-xl p-3 text-center">
+      <p class="text-xs text-gray-400">Muestra tu pantalla en caja para recibir tu sello</p>
+    </footer>
+  </main>
+
+  <button id="btn-install" class="hidden mt-6 bg-yellow-400 hover:bg-yellow-300 text-gray-950 font-bold py-3 px-6 rounded-2xl shadow-xl w-full max-w-sm transition-all transform active:scale-95">
+    Guardar tarjeta en el teléfono
+  </button>
+
+  <div id="ios-guide" class="hidden mt-6 bg-blue-950/40 border border-blue-500/40 text-blue-200 p-4 rounded-2xl max-w-sm text-center text-sm shadow-lg">
+    <p>Para no perder tus sellos acumulados:</p>
+    <p class="mt-2 text-xs text-blue-300">
+      Pulsa el botón <span class="font-bold underline text-white">Compartir</span> en la barra inferior y elige <span class="font-bold underline text-white">Añadir a pantalla de inicio</span>.
+    </p>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js');
+      });
+    }
+
+    let installPromptEvent;
+    const installButton = document.getElementById('btn-install');
+    const iosBanner = document.getElementById('ios-guide');
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      installPromptEvent = event;
+      installButton.classList.remove('hidden');
+    });
+
+    installButton.addEventListener('click', async () => {
+      if (installPromptEvent) {
+        installPromptEvent.prompt();
+        const result = await installPromptEvent.userChoice;
+        if (result.outcome === 'accepted') {
+          installButton.classList.add('hidden');
+        }
+        installPromptEvent = null;
+      }
+    });
+
+    const isAppleDevice = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+    const isRunningStandalone = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+
+    if (isAppleDevice() && !isRunningStandalone()) {
+      iosBanner.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
