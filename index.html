@@ -50,14 +50,15 @@
     </footer>
   </main>
 
-  <button id="btn-install" class="hidden mt-6 bg-yellow-400 hover:bg-yellow-300 text-gray-950 font-bold py-3 px-6 rounded-2xl shadow-xl w-full max-w-sm transition-all transform active:scale-95">
-    Guardar tarjeta en el teléfono
+  <!-- Botón nativo de instalación -->
+  <button id="btn-install" class="mt-6 bg-yellow-400 hover:bg-yellow-300 text-gray-950 font-bold py-3 px-6 rounded-2xl shadow-xl w-full max-w-sm transition-all transform active:scale-95 flex items-center justify-center gap-2">
+    <span>Descargar Tarjeta Oficial</span>
   </button>
 
   <div id="ios-guide" class="hidden mt-6 bg-blue-950/40 border border-blue-500/40 text-blue-200 p-4 rounded-2xl max-w-sm text-center text-sm shadow-lg">
-    <p>Para no perder tus sellos acumulados:</p>
+    <p>Para guardar tu tarjeta en iPhone:</p>
     <p class="mt-2 text-xs text-blue-300">
-      Pulsa el botón <span class="font-bold underline text-white">Compartir</span> en la barra inferior y elige <span class="font-bold underline text-white">Añadir a pantalla de inicio</span>.
+      Pulsa <span class="font-bold underline text-white">Compartir</span> abajo y luego <span class="font-bold underline text-white">Añadir a pantalla de inicio</span>.
     </p>
   </div>
 
@@ -68,14 +69,13 @@
       });
     }
 
-    let installPromptEvent;
+    let installPromptEvent = null;
     const installButton = document.getElementById('btn-install');
     const iosBanner = document.getElementById('ios-guide');
 
     window.addEventListener('beforeinstallprompt', (event) => {
       event.preventDefault();
       installPromptEvent = event;
-      installButton.classList.remove('hidden');
     });
 
     installButton.addEventListener('click', async () => {
@@ -86,6 +86,8 @@
           installButton.classList.add('hidden');
         }
         installPromptEvent = null;
+      } else {
+        alert('Para instalar la tarjeta completa: abre el menú de opciones de tu navegador arriba a la derecha y selecciona "Instalar aplicación".');
       }
     });
 
@@ -93,6 +95,7 @@
     const isRunningStandalone = () => ('standalone' in window.navigator) && (window.navigator.standalone);
 
     if (isAppleDevice() && !isRunningStandalone()) {
+      installButton.classList.add('hidden');
       iosBanner.classList.remove('hidden');
     }
   </script>
