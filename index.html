@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="AURA Pass">
   <link rel="apple-touch-icon" href="/icon-192.png">
 
-  <!-- Frameworks & Librerías -->
+  <!-- Frameworks y Librerías -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
@@ -45,9 +45,7 @@
 </head>
 <body class="bg-[#050608] text-slate-100 min-h-screen flex flex-col items-center justify-between p-4 selection:bg-white selection:text-black">
 
-  <!-- ======================================================== -->
-  <!-- VISTA 1: PORTAL DE SELECCIÓN DE ENTORNO (CLIENTE / STAFF) -->
-  <!-- ======================================================== -->
+  <!-- PORTAL DE ACCESO (CLIENTE / TRABAJADOR) -->
   <section id="view-portal" class="w-full max-w-sm my-auto flex flex-col gap-6">
     <div class="text-center">
       <span class="text-[10px] font-tech tracking-[0.3em] text-slate-400 uppercase font-semibold">Sistema de Membresías</span>
@@ -56,33 +54,25 @@
     </div>
 
     <div class="flex flex-col gap-3">
-      <!-- Tarjeta Acceso Cliente -->
       <button onclick="goToClientPortal()" class="titanium-card p-5 rounded-2xl flex items-center justify-between text-left hover:border-white/30 transition-all active:scale-[0.98]">
         <div>
           <span class="text-base font-bold text-white block">Soy Cliente</span>
           <span class="text-xs text-slate-400">Ver mis sellos acumulados y mi código QR</span>
         </div>
-        <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white">
-          →
-        </div>
+        <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white">→</div>
       </button>
 
-      <!-- Tarjeta Acceso Trabajador -->
       <button onclick="showView('view-staff-auth')" class="titanium-card p-5 rounded-2xl flex items-center justify-between text-left hover:border-white/30 transition-all active:scale-[0.98]">
         <div>
           <span class="text-base font-bold text-white block">Soy Trabajador</span>
           <span class="text-xs text-slate-400">Escanear clientes, sellar visitas y avisos</span>
         </div>
-        <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400">
-          🔒
-        </div>
+        <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400">🔒</div>
       </button>
     </div>
   </section>
 
-  <!-- ======================================================== -->
-  <!-- VISTA 2: FORMULARIO DE REGISTRO PARA CLIENTES NUEVOS     -->
-  <!-- ======================================================== -->
+  <!-- FORMULARIO DE REGISTRO PARA CLIENTES -->
   <section id="view-register" class="hidden w-full max-w-sm my-auto flex flex-col gap-5">
     <div class="text-center">
       <span class="text-[10px] font-tech tracking-[0.3em] text-slate-400 uppercase font-semibold">Pase Único</span>
@@ -108,9 +98,7 @@
     <button onclick="showView('view-portal')" class="text-xs text-slate-500 hover:text-white text-center">Volver al inicio</button>
   </section>
 
-  <!-- ======================================================== -->
-  <!-- VISTA 3: AUTENTICACIÓN CON PIN DE 6 DÍGITOS TRABAJADOR   -->
-  <!-- ======================================================== -->
+  <!-- AUTENTICACIÓN CON NIP DE TRABAJADOR -->
   <section id="view-staff-auth" class="hidden w-full max-w-sm my-auto flex flex-col gap-5">
     <div class="text-center">
       <span class="text-[10px] font-tech tracking-[0.3em] text-slate-400 uppercase font-semibold">Acceso Restringido</span>
@@ -129,9 +117,7 @@
     <button onclick="showView('view-portal')" class="text-xs text-slate-500 hover:text-white text-center">Volver al inicio</button>
   </section>
 
-  <!-- ======================================================== -->
-  <!-- VISTA 4: TARJETA EXCLUSIVA DEL CLIENTE (PERMANENTE)     -->
-  <!-- ======================================================== -->
+  <!-- TARJETA EXCLUSIVA DEL CLIENTE -->
   <section id="view-client-card" class="hidden w-full max-w-sm flex flex-col items-center gap-5 my-auto">
     <header class="w-full flex items-center justify-between px-1">
       <div class="flex items-center gap-2">
@@ -150,9 +136,7 @@
           <h2 class="text-xl font-extrabold text-white mt-0.5 tracking-tight" id="client-name-display">Nombre</h2>
           <p class="text-[11px] text-slate-400 font-mono" id="client-email-display">correo@ejemplo.com</p>
         </div>
-        <div class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center font-bold text-xs text-white">
-          ✦
-        </div>
+        <div class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center font-bold text-xs text-white">✦</div>
       </div>
 
       <!-- Barra de progreso -->
@@ -166,10 +150,10 @@
         </div>
       </div>
 
-      <!-- Cuadrícula protegida de 6 sellos -->
+      <!-- Cuadrícula de sellos protegida -->
       <div id="client-stamps-grid" class="grid grid-cols-3 gap-3"></div>
 
-      <!-- QR Individual del cliente -->
+      <!-- Código QR portador de la credencial -->
       <div class="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center">
         <div class="bg-white p-2.5 rounded-xl shadow-md" id="qrcode-target"></div>
         <span class="text-[10px] font-tech text-slate-300 tracking-wider font-bold mt-3 uppercase text-center" id="client-status-note">
@@ -179,15 +163,12 @@
       </div>
     </main>
 
-    <!-- Botón de instalación -->
     <button id="btn-install" class="hidden w-full bg-white hover:bg-slate-200 text-black font-tech font-bold text-xs uppercase py-3.5 rounded-2xl shadow-xl transition-all active:scale-95">
       Guardar Tarjeta en el Celular
     </button>
   </section>
 
-  <!-- ======================================================== -->
-  <!-- VISTA 5: TERMINAL DE TRABAJADOR CON CÁMARA DIRECTA      -->
-  <!-- ======================================================== -->
+  <!-- TERMINAL DE TRABAJADOR CON LECTOR NATIVO -->
   <section id="view-staff-dashboard" class="hidden w-full max-w-sm flex flex-col gap-4 my-auto">
     <header class="flex items-center justify-between px-1">
       <div>
@@ -199,15 +180,15 @@
       </button>
     </header>
 
-    <!-- Contenedor de cámara nativa directa -->
+    <!-- Visor de cámara trasera -->
     <div class="titanium-card p-4 rounded-3xl flex flex-col items-center gap-3">
       <div id="scanner-video" class="w-full aspect-square bg-black rounded-2xl overflow-hidden border border-white/10 flex items-center justify-center text-xs text-slate-500">
         Iniciando cámara...
       </div>
-      <p class="text-[10px] font-tech text-slate-400 uppercase tracking-wider text-center">Apunta la cámara al código QR del cliente</p>
+      <p class="text-[10px] font-tech text-slate-400 uppercase tracking-wider text-center">Apunta al código QR del cliente</p>
     </div>
 
-    <!-- Información del cliente escaneado -->
+    <!-- Ficha de cliente detectado -->
     <div id="staff-client-card" class="hidden titanium-card p-5 rounded-3xl flex flex-col gap-4">
       <div>
         <span class="text-[9px] font-tech text-slate-400 uppercase tracking-widest block">Cliente Identificado</span>
@@ -230,7 +211,7 @@
       </div>
     </div>
 
-    <!-- Módulo de Notificaciones Push -->
+    <!-- Emisor de notificaciones directas -->
     <div class="titanium-card p-4 rounded-3xl flex flex-col gap-3">
       <span class="text-[10px] font-tech text-slate-400 uppercase tracking-widest font-semibold block">Avisos Push</span>
       <input type="text" id="push-title" placeholder="Título de la alerta" 
@@ -243,14 +224,20 @@
     </div>
   </section>
 
-  <!-- Pie institucional -->
+  <!-- Pie de navegación -->
   <footer class="w-full max-w-sm pt-4 pb-2 text-center text-[10px] font-tech text-slate-600 border-t border-white/5">
     AURA LUXURY PASS // TECNOLOGÍA NFC & PWA
   </footer>
 
   <script>
+    let swRegistration = null;
+
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+          swRegistration = reg;
+        });
+      });
     }
 
     const MAX_STAMPS = 6;
@@ -259,19 +246,16 @@
     let currentCustomer = null;
     let targetCustomer = null;
 
-    // Control de Vistas
     function showView(viewId) {
       const views = ['view-portal', 'view-register', 'view-staff-auth', 'view-client-card', 'view-staff-dashboard'];
       views.forEach(id => document.getElementById(id).classList.add('hidden'));
       document.getElementById(viewId).classList.remove('hidden');
     }
 
-    // Ruta de acceso para clientes (Comprueba si ya tiene sesión fija)
     function goToClientPortal() {
       const saved = localStorage.getItem('aura_customer_profile');
       if (saved) {
         currentCustomer = JSON.parse(saved);
-        // Sincronizar sellos con la base local
         const record = localStorage.getItem('aura_user_' + currentCustomer.uid);
         if (record) currentCustomer = JSON.parse(record);
         renderCustomerCard();
@@ -280,7 +264,6 @@
       }
     }
 
-    // Registro de cliente
     function handleRegister(e) {
       e.preventDefault();
       const name = document.getElementById('reg-name').value.trim();
@@ -294,9 +277,7 @@
         stamps: 0
       };
 
-      // Guardar sesión persistente del cliente
       localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
-      // Guardar en la base de datos de usuarios
       localStorage.setItem('aura_user_' + uid, JSON.stringify(currentCustomer));
 
       if ("Notification" in window && Notification.permission !== "granted") {
@@ -306,7 +287,6 @@
       renderCustomerCard();
     }
 
-    // Dibujar tarjeta del cliente
     function renderCustomerCard() {
       showView('view-client-card');
 
@@ -316,7 +296,6 @@
       document.getElementById('client-uid-tag').innerText = 'UID: ' + currentCustomer.uid;
       document.getElementById('client-progress-bar').style.width = ((currentCustomer.stamps / MAX_STAMPS) * 100) + '%';
 
-      // Dibujar casillas protegidas
       const grid = document.getElementById('client-stamps-grid');
       grid.innerHTML = '';
       for (let i = 1; i <= MAX_STAMPS; i++) {
@@ -345,16 +324,23 @@
         grid.appendChild(box);
       }
 
-      // Código QR único asociado al UID del cliente
+      // El código QR ahora viaja con el paquete completo de datos del cliente
+      const qrPayload = JSON.stringify({
+        uid: currentCustomer.uid,
+        name: currentCustomer.name,
+        email: currentCustomer.email,
+        stamps: currentCustomer.stamps
+      });
+
       const qrBox = document.getElementById('qrcode-target');
       qrBox.innerHTML = '';
       new QRCode(qrBox, {
-        text: currentCustomer.uid,
-        width: 125,
-        height: 125,
+        text: qrPayload,
+        width: 130,
+        height: 130,
         colorDark: "#000000",
         colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
+        correctLevel: QRCode.CorrectLevel.M
       });
 
       const statusNote = document.getElementById('client-status-note');
@@ -373,7 +359,6 @@
       }
     }
 
-    // Validación de NIP de Trabajador
     function verifyStaffPIN() {
       const pin = document.getElementById('staff-pin-input').value.trim();
       if (pin === STAFF_PIN) {
@@ -385,7 +370,6 @@
       }
     }
 
-    // Inicializador directo de la cámara trasera
     function launchDirectCamera() {
       if (qrReaderInstance) {
         qrReaderInstance.stop().catch(() => {}).then(() => startScannerStream());
@@ -405,7 +389,7 @@
         (errorMessage) => {}
       ).catch(err => {
         console.error("Error al acceder a la cámara:", err);
-        document.getElementById('scanner-video').innerText = "Permiso de cámara denegado o no disponible en este dispositivo.";
+        document.getElementById('scanner-video').innerText = "Permiso de cámara denegado o no disponible.";
       });
     }
 
@@ -422,18 +406,35 @@
       }
     }
 
-    // Detección de QR de cliente por el escáner
-    function onBarcodeDetected(uid) {
-      const stored = localStorage.getItem('aura_user_' + uid);
-      if (stored) {
-        targetCustomer = JSON.parse(stored);
+    // Lector universal: procesa códigos directos, paquetes JSON o URLs
+    function onBarcodeDetected(rawData) {
+      let parsed = null;
+
+      try {
+        parsed = JSON.parse(rawData);
+      } catch (e) {
+        // Si no es JSON plano, buscar si está guardado en este dispositivo
+        const stored = localStorage.getItem('aura_user_' + rawData);
+        if (stored) parsed = JSON.parse(stored);
+      }
+
+      if (parsed && parsed.uid) {
+        // Sincronizar o rescatar el conteo real almacenado en el lector
+        const localRecord = localStorage.getItem('aura_user_' + parsed.uid);
+        if (localRecord) {
+          targetCustomer = JSON.parse(localRecord);
+        } else {
+          targetCustomer = parsed;
+          localStorage.setItem('aura_user_' + targetCustomer.uid, JSON.stringify(targetCustomer));
+        }
+
         document.getElementById('staff-client-card').classList.remove('hidden');
         document.getElementById('scanned-client-name').innerText = targetCustomer.name;
         document.getElementById('scanned-client-email').innerText = targetCustomer.email;
         document.getElementById('scanned-client-stamps').innerText = targetCustomer.stamps + ' / ' + MAX_STAMPS;
         if (navigator.vibrate) navigator.vibrate(60);
       } else {
-        alert("Código QR no reconocido: " + uid);
+        alert("Código no reconocido. Asegúrate de escanear el QR oficial de AURA.");
       }
     }
 
@@ -443,7 +444,6 @@
         targetCustomer.stamps++;
         localStorage.setItem('aura_user_' + targetCustomer.uid, JSON.stringify(targetCustomer));
         
-        // Si el cliente está usando el mismo navegador de prueba, sincroniza su sesión
         if (currentCustomer && currentCustomer.uid === targetCustomer.uid) {
           localStorage.setItem('aura_customer_profile', JSON.stringify(targetCustomer));
         }
@@ -472,8 +472,8 @@
       }
     }
 
-    // Disparador de Notificación
-    function dispatchPushNotification() {
+    // Disparador de notificación nativa por Service Worker
+    async function dispatchPushNotification() {
       const title = document.getElementById('push-title').value.trim();
       const desc = document.getElementById('push-desc').value.trim();
 
@@ -482,22 +482,39 @@
         return;
       }
 
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification(title, {
-          body: desc,
-          icon: "/icon-192.png"
-        });
-        alert("Notificación enviada al dispositivo.");
-      } else if ("Notification" in window) {
-        Notification.requestPermission().then(perm => {
-          if (perm === "granted") {
-            new Notification(title, { body: desc, icon: "/icon-192.png" });
-          }
-        });
+      if (!("Notification" in window)) {
+        alert("Este dispositivo o navegador no soporta notificaciones.");
+        return;
+      }
+
+      let permission = Notification.permission;
+      if (permission !== "granted") {
+        permission = await Notification.requestPermission();
+      }
+
+      if (permission === "granted") {
+        try {
+          const reg = await navigator.serviceWorker.ready;
+          await reg.showNotification(title, {
+            body: desc,
+            icon: '/icon-192.png',
+            badge: '/icon-192.png',
+            vibrate: [200, 100, 200]
+          });
+          alert("Notificación enviada a la bandeja del teléfono.");
+        } catch (err) {
+          navigator.serviceWorker.controller.postMessage({
+            type: 'SHOW_NOTIFICATION',
+            title: title,
+            body: desc
+          });
+          alert("Notificación disparada mediante Service Worker.");
+        }
+      } else {
+        alert("Permiso de notificaciones bloqueado en los ajustes del navegador.");
       }
     }
 
-    // Instalación PWA
     let deferredPromptEvent;
     const btnInstall = document.getElementById('btn-install');
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -515,7 +532,6 @@
       }
     });
 
-    // Auto-detección al entrar: si el cliente ya tiene sesión, entra directo a su tarjeta
     window.addEventListener('DOMContentLoaded', () => {
       const saved = localStorage.getItem('aura_customer_profile');
       if (saved) {
