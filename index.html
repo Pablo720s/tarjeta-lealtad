@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -8,7 +7,6 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="AURA Pass">
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -57,32 +55,27 @@
   <!-- PORTAL DE INICIO -->
   <section id="view-portal" class="w-full max-w-sm my-auto flex flex-col gap-6">
     <div class="text-center">
-      <span class="text-[10px] font-tech tracking-[0.3em] text-slate-400 uppercase font-semibold">Sistema Central</span>
       <h1 class="text-3xl font-extrabold text-white mt-1">AURA CLUB</h1>
     </div>
     <div class="flex flex-col gap-3">
       <button onclick="goToClientPortal()" class="titanium-card p-5 rounded-2xl flex items-center justify-between text-left active:scale-[0.98]">
         <div>
           <span class="text-base font-bold text-white block">Soy Cliente</span>
-          <span class="text-xs text-slate-400">Ver mis sellos y código QR</span>
         </div>
-        <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white">→</div>
+        <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">→</div>
       </button>
       <button onclick="showView('view-staff-auth')" class="titanium-card p-5 rounded-2xl flex items-center justify-between text-left active:scale-[0.98]">
         <div>
           <span class="text-base font-bold text-white block">Soy Trabajador</span>
-          <span class="text-xs text-slate-400">Escanear y sellar visitas</span>
         </div>
-        <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400">🔒</div>
+        <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">🔒</div>
       </button>
     </div>
   </section>
 
   <!-- REGISTRO CLIENTE -->
   <section id="view-register" class="hidden w-full max-w-sm my-auto flex flex-col gap-5">
-    <div class="text-center">
-      <h2 class="text-2xl font-bold text-white">Alta de Miembro</h2>
-    </div>
+    <h2 class="text-2xl font-bold text-center text-white">Alta de Miembro</h2>
     <form onsubmit="handleRegister(event)" class="titanium-card p-6 rounded-3xl flex flex-col gap-4">
       <input type="text" id="reg-name" required placeholder="Nombre Completo" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none">
       <input type="email" id="reg-email" required placeholder="Correo Electrónico" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none">
@@ -93,9 +86,7 @@
 
   <!-- ACCESO TRABAJADOR -->
   <section id="view-staff-auth" class="hidden w-full max-w-sm my-auto flex flex-col gap-5">
-    <div class="text-center">
-      <h2 class="text-2xl font-bold text-white">Terminal Personal</h2>
-    </div>
+    <h2 class="text-2xl font-bold text-center text-white">Terminal Personal</h2>
     <div class="titanium-card p-6 rounded-3xl flex flex-col gap-4">
       <input type="password" id="staff-pin-input" maxlength="6" inputmode="numeric" placeholder="••••••" class="w-full bg-black/60 border border-white/20 rounded-xl py-3 text-center text-2xl tracking-[0.5em] text-white focus:outline-none">
       <button onclick="verifyStaffPIN()" class="w-full bg-white text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl shadow active:scale-95">Ingresar</button>
@@ -106,7 +97,10 @@
   <!-- TARJETA DEL CLIENTE -->
   <section id="view-client-card" class="hidden w-full max-w-sm flex flex-col items-center gap-5 my-auto">
     <header class="w-full flex justify-between px-1">
-      <span class="text-[10px] font-tech text-emerald-400 uppercase">● Sincronización Activa</span>
+      <div class="flex items-center gap-2">
+        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="cloud-status-text" class="text-[10px] font-tech text-emerald-400 uppercase">Sincronizando</span>
+      </div>
       <button onclick="logoutCustomer()" class="text-[10px] font-tech text-slate-500 uppercase">Salir</button>
     </header>
 
@@ -115,7 +109,6 @@
         <h2 class="text-xl font-extrabold text-white" id="client-name-display">Nombre</h2>
         <p class="text-[11px] text-slate-400 font-mono" id="client-email-display">correo</p>
       </div>
-
       <div>
         <div class="flex justify-between text-[10px] font-tech mb-2">
           <span class="text-slate-400">PROGRESO</span>
@@ -125,14 +118,11 @@
           <div id="client-progress-bar" class="bg-white h-full rounded-full transition-all duration-500" style="width: 0%"></div>
         </div>
       </div>
-
       <div id="client-stamps-grid" class="grid grid-cols-3 gap-3"></div>
 
       <div class="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col items-center">
-        <!-- Contenedor del QR Comprimido -->
         <div class="bg-white p-3 rounded-xl" id="qrcode-target"></div>
-        <span class="text-[10px] font-tech text-slate-300 font-bold mt-3 uppercase text-center" id="client-status-note">Escanear QR en caja</span>
-        <span class="text-[9px] font-mono text-slate-500 mt-1" id="client-uid-tag">UID: ---</span>
+        <span class="text-[9px] font-mono text-slate-500 mt-2" id="client-uid-tag">UID: ---</span>
       </div>
     </main>
   </section>
@@ -143,30 +133,24 @@
       <span class="text-[10px] font-tech text-slate-400 uppercase font-semibold">Lector QR</span>
       <button onclick="stopCameraAndExit()" class="text-xs font-tech text-slate-400">Cerrar</button>
     </header>
-
     <div class="titanium-card p-4 rounded-3xl flex flex-col items-center gap-3">
       <div id="scanner-video" class="w-full aspect-square bg-black rounded-2xl overflow-hidden flex items-center justify-center text-xs text-slate-500">
-        Iniciando cámara...
+        Cámara...
       </div>
     </div>
-
     <div id="staff-client-card" class="hidden titanium-card p-5 rounded-3xl flex flex-col gap-4">
       <div>
         <span class="text-[9px] font-tech text-emerald-400 uppercase block">Cliente Reconocido</span>
         <h3 class="text-lg font-bold text-white" id="scanned-client-name">---</h3>
-        <p class="text-[10px] text-slate-400 font-mono">UID: <span id="scanned-client-uid">---</span></p>
       </div>
-
       <div class="flex justify-between bg-black/40 p-3 rounded-xl border border-white/5">
         <span class="text-xs font-tech text-slate-300">Sellos Acumulados</span>
         <span class="text-lg font-bold text-white font-tech" id="scanned-client-stamps">0 / 6</span>
       </div>
-
       <div class="flex gap-2">
         <button onclick="applyStampWorker()" id="btn-add-stamp" class="flex-1 bg-white text-black font-tech font-bold text-xs uppercase py-3 rounded-xl active:scale-95">+ Sellar</button>
         <button onclick="redeemRewardWorker()" class="bg-slate-800 text-slate-200 font-tech font-bold text-xs uppercase px-4 py-3 rounded-xl border border-white/10 active:scale-95">Canjear</button>
       </div>
-
       <div class="border-t border-white/10 pt-3 flex flex-col gap-2">
         <span class="text-[9px] font-tech text-slate-400 uppercase">Notificación Remota</span>
         <input type="text" id="target-push-title" placeholder="Título" class="w-full bg-black/50 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none">
@@ -249,9 +233,7 @@
         </div>`;
       }
 
-      // QR COMPRIMIDO: Solo un string corto (Ej: AU-123456|Angel|correo|0)
       const qrPayload = `${currentCustomer.uid}|${currentCustomer.name}|${currentCustomer.email}|${currentCustomer.stamps}`;
-      
       const qrBox = document.getElementById('qrcode-target');
       qrBox.innerHTML = '';
       new QRCode(qrBox, {
@@ -260,11 +242,10 @@
         height: 160, 
         colorDark: "#000000", 
         colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.L // Nivel L: Super fácil de leer por la cámara
+        correctLevel: QRCode.CorrectLevel.L
       });
     }
 
-    // SINCRONIZACIÓN INVISIBLE Y AUTOMÁTICA CADA 3 SEGUNDOS
     function startCloudSync() {
       if (syncIntervalId) clearInterval(syncIntervalId);
       syncIntervalId = setInterval(async () => {
@@ -272,6 +253,10 @@
         try {
           const res = await fetch(`/api/sync?uid=${currentCustomer.uid}&nocache=${Date.now()}`);
           if (res.ok) {
+            document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
+            document.getElementById('cloud-status-text').innerText = "Nube OK";
+            document.getElementById('cloud-status-text').className = "text-[10px] font-tech text-emerald-400 uppercase";
+
             const data = await res.json();
             if (data.stamps !== undefined && data.stamps !== currentCustomer.stamps) {
               currentCustomer.stamps = data.stamps;
@@ -283,8 +268,16 @@
               lastNotifId = data.pendingNotification.id;
               fireNotification(data.pendingNotification.title, data.pendingNotification.body);
             }
+          } else {
+            // INDICADOR ROJO SI LA NUBE RECHAZA LA CONEXIÓN
+            document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-red-500";
+            document.getElementById('cloud-status-text').innerText = "Error BD";
+            document.getElementById('cloud-status-text').className = "text-[10px] font-tech text-red-500 uppercase";
           }
-        } catch (e) {}
+        } catch (e) {
+            document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-red-500";
+            document.getElementById('cloud-status-text').innerText = "Sin Internet";
+        }
       }, 3000);
     }
 
@@ -296,11 +289,7 @@
     }
 
     function closeInAppNotification() { document.getElementById('in-app-notification').style.top = '-100%'; }
-    
-    function logoutCustomer() { 
-      localStorage.removeItem('aura_customer_profile'); 
-      showView('view-portal'); 
-    }
+    function logoutCustomer() { localStorage.removeItem('aura_customer_profile'); showView('view-portal'); }
 
     /* =========================================
        LÓGICA DEL TRABAJADOR
@@ -324,22 +313,16 @@
       else showView('view-portal');
     }
 
-    // AUTO-REPARACIÓN: LEE EL QR COMPRIMIDO AUNQUE LA NUBE FALLE
     async function processScannedQR(rawText) {
       let uid = rawText.trim();
       let fallbackCustomer = null;
 
-      // Descomprime el formato: AU-123|Nombre|Email|Sellos
       if (uid.includes('|')) {
         const parts = uid.split('|');
         uid = parts[0];
         fallbackCustomer = { uid: parts[0], name: parts[1], email: parts[2], stamps: parseInt(parts[3]) || 0 };
-      } else {
-        // Respaldo por si escanean un QR viejo en formato JSON
-        try { let parsed = JSON.parse(uid); if (parsed.uid) { uid = parsed.uid; fallbackCustomer = parsed; } } catch(e) {}
       }
 
-      // 1. Intenta conectarse a la nube
       try {
         const res = await fetch(`/api/sync?uid=${uid}&nocache=${Date.now()}`);
         if (res.ok) {
@@ -348,13 +331,12 @@
           throw new Error("No en la nube");
         }
       } catch(e) {
-        // 2. Si la nube falla, rescata los datos de la memoria del celular o directamente desde el QR
         const local = localStorage.getItem('aura_staff_db_' + uid);
         if (local) {
           targetCustomer = JSON.parse(local);
         } else if (fallbackCustomer) {
           targetCustomer = fallbackCustomer;
-          // Repara el error subiéndolo a la nube en segundo plano
+          // Reparación de nube
           fetch('/api/sync', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -367,12 +349,10 @@
 
       document.getElementById('staff-client-card').classList.remove('hidden');
       document.getElementById('scanned-client-name').innerText = targetCustomer.name;
-      document.getElementById('scanned-client-uid').innerText = targetCustomer.uid;
       document.getElementById('scanned-client-stamps').innerText = targetCustomer.stamps + ' / ' + MAX_STAMPS;
       if(navigator.vibrate) navigator.vibrate(60);
     }
 
-    // SOBRESCRITURA FORZADA
     async function applyStampWorker() {
       if (!targetCustomer) return;
       if (targetCustomer.stamps >= MAX_STAMPS) { alert("Tarjeta llena"); return; }
@@ -384,12 +364,20 @@
       document.getElementById('scanned-client-stamps').innerText = targetCustomer.stamps + ' / ' + MAX_STAMPS;
       localStorage.setItem('aura_staff_db_' + targetCustomer.uid, JSON.stringify(targetCustomer));
 
-      // Sobrescribe todo el perfil obligando a la nube a tomar este nuevo número de sellos
-      fetch('/api/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: targetCustomer.uid, action: 'REGISTER', customerData: targetCustomer })
-      });
+      try {
+        const res = await fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uid: targetCustomer.uid, action: 'REGISTER', customerData: targetCustomer })
+        });
+        
+        if (!res.ok) {
+          const errData = await res.text();
+          alert("¡ALERTA!: El sello se guardó en este celular, pero la Nube lo rechazó. El cliente no lo verá. Detalle: " + errData);
+        }
+      } catch (err) {
+        alert("Fallo de red. El sello se guardó solo en este dispositivo.");
+      }
       
       if(navigator.vibrate) navigator.vibrate([50,50,50]);
       btn.innerText = "+ Sellar"; btn.disabled = false;
@@ -397,7 +385,6 @@
 
     async function redeemRewardWorker() {
       if (!targetCustomer) return;
-      
       targetCustomer.stamps = 0;
       document.getElementById('scanned-client-stamps').innerText = '0 / ' + MAX_STAMPS;
       localStorage.setItem('aura_staff_db_' + targetCustomer.uid, JSON.stringify(targetCustomer));
@@ -426,9 +413,11 @@
         })
       }).then(res => {
         if(res.ok) {
-          alert("¡Mensaje en camino al teléfono de " + targetCustomer.name + "!");
+          alert("¡Mensaje en camino al teléfono del cliente!");
           document.getElementById('target-push-title').value = '';
           document.getElementById('target-push-body').value = '';
+        } else {
+          alert("La base de datos de Cloudflare rechazó el mensaje.");
         }
       });
     }
