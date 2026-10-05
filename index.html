@@ -3,146 +3,191 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pase VIP de Fidelidad</title>
+  <title>LUMEN // Studio Club</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Pase VIP">
+  <meta name="apple-mobile-web-app-title" content="LUMEN">
   <link rel="apple-touch-icon" href="/icon-192.png">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Generador de Códigos QR de alta resolución -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;700;800;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
   <style>
-    @keyframes pulseGlow {
-      0%, 100% { box-shadow: 0 0 25px rgba(234, 179, 8, 0.2), inset 0 0 15px rgba(234, 179, 8, 0.1); }
-      50% { box-shadow: 0 0 35px rgba(234, 179, 8, 0.4), inset 0 0 20px rgba(234, 179, 8, 0.2); }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
     }
-    .neon-card {
-      background: radial-gradient(120% 120% at 50% 0%, #1e1f2b 0%, #0d0e15 100%);
-      animation: pulseGlow 5s infinite ease-in-out;
+    .font-mono-tech {
+      font-family: 'Space Mono', monospace;
     }
-    .glass-specular {
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 60%, rgba(255, 255, 255, 0) 100%);
+    .glass-card {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.15) 100%);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      box-shadow: 0 30px 60px -12px rgba(15, 23, 42, 0.12), 
+                  0 18px 36px -18px rgba(15, 23, 42, 0.08),
+                  inset 0 1px 1px 0 rgba(255, 255, 255, 0.9);
+    }
+    .glass-inner {
+      background: rgba(255, 255, 255, 0.35);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    .orb-glow-1 {
+      background: radial-gradient(circle, rgba(163, 230, 53, 0.55) 0%, rgba(59, 130, 246, 0.35) 45%, rgba(255, 255, 255, 0) 70%);
+      filter: blur(50px);
+    }
+    .orb-glow-2 {
+      background: radial-gradient(circle, rgba(217, 70, 239, 0.35) 0%, rgba(99, 102, 241, 0.25) 50%, rgba(255, 255, 255, 0) 70%);
+      filter: blur(60px);
+    }
+    .stamp-active {
+      background: radial-gradient(circle at 30% 30%, #ecfccb 0%, #a3e635 45%, #4d7c0f 100%);
+      box-shadow: 0 10px 25px -5px rgba(132, 204, 22, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+    }
+    .stamp-empty {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1.5px dashed rgba(100, 116, 139, 0.3);
+    }
+    .stamp-prize {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(244, 244, 245, 0.2) 100%);
+      border: 1.5px dashed rgba(163, 230, 53, 0.8);
     }
   </style>
 </head>
-<body class="bg-[#07080c] text-white min-h-screen flex flex-col items-center justify-between p-4 selection:bg-yellow-500 selection:text-black font-sans">
+<body class="bg-[#f2f4f8] text-[#0f172a] min-h-screen flex flex-col items-center justify-between p-4 selection:bg-[#a3e635] selection:text-black relative overflow-x-hidden">
 
-  <!-- Encabezado superior -->
-  <header class="w-full max-w-sm flex items-center justify-between pt-2 pb-4">
-    <div class="flex items-center gap-2">
-      <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></div>
-      <span class="text-[11px] font-mono tracking-widest text-emerald-400 uppercase">Pase Activo</span>
+  <!-- Retícula ambiental y orbes de refracción líquida inspirados en Mural y Sapforce -->
+  <div class="fixed inset-0 pointer-events-none z-0">
+    <div class="absolute top-10 left-1/2 -translate-x-1/2 w-80 h-80 orb-glow-1 rounded-full"></div>
+    <div class="absolute bottom-10 right-0 w-72 h-72 orb-glow-2 rounded-full"></div>
+    <!-- Cruces técnicas de fondo estilo DgtlCore -->
+    <div class="absolute top-16 left-8 text-slate-300 font-mono-tech text-xs select-none">+</div>
+    <div class="absolute top-44 right-8 text-slate-300 font-mono-tech text-xs select-none">✦</div>
+    <div class="absolute bottom-40 left-10 text-slate-300 font-mono-tech text-xs select-none">✦</div>
+    <div class="absolute bottom-16 right-12 text-slate-300 font-mono-tech text-xs select-none">+</div>
+  </div>
+
+  <!-- Barra de navegación en píldora estilo DgtlCore / Sapforce -->
+  <header class="w-full max-w-sm flex items-center justify-between z-10 pt-2 pb-3">
+    <div class="glass-inner px-3 py-1 rounded-full flex items-center gap-2 shadow-sm">
+      <span class="w-2 h-2 rounded-full bg-[#a3e635] shadow-[0_0_8px_#a3e635]"></span>
+      <span class="text-[10px] font-mono-tech tracking-widest text-slate-600 uppercase font-bold">LUMEN // 01</span>
     </div>
-    <span class="text-[11px] font-mono text-gray-500 uppercase tracking-widest" id="customer-id-tag">ID: CARGANDO...</span>
+    <div class="glass-inner px-3 py-1 rounded-full text-[10px] font-mono-tech text-slate-500 shadow-sm" id="customer-id-tag">
+      UID: SYNCING
+    </div>
   </header>
 
-  <!-- Tarjeta VIP Interactiva -->
-  <main class="w-full max-w-sm neon-card border border-yellow-500/30 rounded-[2.5rem] p-6 shadow-2xl relative overflow-hidden flex flex-col gap-6">
+  <!-- Tipografía editorial monumental detrás del cristal inspirada en Sapforce y DgtlCore -->
+  <div class="w-full max-w-sm relative z-0 -mb-7 px-2">
+    <h2 class="text-[52px] font-black tracking-tighter text-slate-900/10 leading-none select-none uppercase">
+      LOYALTY.
+    </h2>
+  </div>
+
+  <!-- Tarjeta Escultural de Cristal Translúcido -->
+  <main class="w-full max-w-sm glass-card rounded-[2.5rem] p-6 relative z-10 flex flex-col gap-5">
     
-    <!-- Reflejo de cristal -->
-    <div class="absolute inset-0 glass-specular pointer-events-none rounded-[2.5rem]"></div>
-    
-    <!-- Chip Contactless & Marca -->
-    <div class="flex items-center justify-between z-10">
+    <!-- Encabezado de la tarjeta -->
+    <div class="flex items-start justify-between">
       <div>
-        <span class="text-[10px] font-mono tracking-[0.25em] text-yellow-400 font-semibold uppercase block">Club Privado</span>
-        <h1 class="text-2xl font-black tracking-tight text-white mt-0.5">BLACK EDITION</h1>
+        <span class="text-[9px] font-mono-tech tracking-[0.25em] text-slate-500 uppercase font-bold block">Exclusive Member Card</span>
+        <h1 class="text-2xl font-black tracking-tight text-slate-900 mt-0.5">The Green Arc</h1>
+        <p class="text-xs text-slate-600 font-normal mt-0.5">Visitas acumuladas & Recompensas</p>
       </div>
-      <!-- Icono NFC Chip simulado -->
-      <div class="w-11 h-9 rounded-lg bg-gradient-to-tr from-yellow-600 via-amber-300 to-yellow-500 p-[1px] shadow-lg">
-        <div class="w-full h-full bg-[#181920] rounded-[7px] flex items-center justify-center">
-          <svg class="w-5 h-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-        </div>
+      <!-- Insignia reflectiva cromada -->
+      <div class="w-10 h-10 rounded-2xl glass-inner flex items-center justify-center shadow-inner relative overflow-hidden">
+        <div class="w-4 h-4 rounded-full bg-gradient-to-tr from-slate-400 via-white to-slate-300 shadow-sm"></div>
       </div>
     </div>
 
-    <!-- Progreso de Sellos -->
-    <div class="z-10">
-      <div class="flex justify-between items-center text-xs font-mono mb-2">
-        <span class="text-gray-400 uppercase tracking-wider">Progreso de Visitas</span>
-        <span class="text-yellow-400 font-bold" id="stamp-counter">0 / 6 SELLOS</span>
+    <!-- Barra de progreso líquida -->
+    <div class="flex flex-col gap-1.5">
+      <div class="flex justify-between items-center text-[10px] font-mono-tech">
+        <span class="text-slate-500 uppercase tracking-wider">Progreso</span>
+        <span class="text-slate-800 font-bold" id="stamp-counter">0 / 6 SELLOS</span>
       </div>
-      <div class="w-full bg-gray-800/80 rounded-full h-1.5 overflow-hidden p-[1px] border border-gray-700/50">
-        <div id="progress-bar" class="bg-gradient-to-r from-amber-500 to-yellow-300 h-full rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+      <div class="w-full bg-slate-200/60 rounded-full h-2 p-[2px] backdrop-blur-sm border border-white/60">
+        <div id="progress-bar" class="bg-gradient-to-r from-slate-900 via-slate-800 to-[#a3e635] h-full rounded-full transition-all duration-500 ease-out shadow-sm" style="width: 0%"></div>
       </div>
     </div>
 
-    <!-- Cuadrícula de Sellos Táctiles -->
-    <section id="stamp-grid" class="grid grid-cols-3 gap-3.5 z-10">
-      <!-- Los sellos se generan dinámicamente con JavaScript -->
+    <!-- Cuadrícula escultural de 6 sellos táctiles -->
+    <section id="stamp-grid" class="grid grid-cols-3 gap-3">
+      <!-- Los sellos se renderizan dinámicamente con JavaScript -->
     </section>
 
-    <!-- Área del Código QR Dinámico para Escaneo en Mostrador -->
-    <div class="bg-gradient-to-b from-[#13141c] to-[#0a0b10] border border-gray-800/90 rounded-2xl p-4 flex flex-col items-center justify-center z-10 shadow-inner">
-      <div class="bg-white p-2.5 rounded-xl shadow-md" id="qrcode-box"></div>
-      <span class="text-[11px] font-mono text-gray-400 tracking-wider mt-3" id="qr-label">PRESENTA EN CAJA AL CONSUMIR</span>
-      <p class="text-[9px] text-gray-500 mt-0.5">El empleado escaneará tu código para sellar la tarjeta</p>
+    <!-- Contenedor del Código QR Minimalista con panel de vidrio -->
+    <div class="glass-inner rounded-3xl p-4 flex flex-col items-center justify-center shadow-sm">
+      <div class="bg-white p-2.5 rounded-2xl shadow-sm border border-slate-100" id="qrcode-box"></div>
+      <span class="text-[10px] font-mono-tech text-slate-700 tracking-wider font-bold mt-3 uppercase text-center" id="qr-label">
+        Escanear en mostrador
+      </span>
+      <p class="text-[9px] text-slate-500 mt-0.5 font-normal">Presenta este código al ordenar</p>
     </div>
   </main>
 
-  <!-- Panel de Control y Pruebas (Simulador de Caja) -->
-  <aside class="w-full max-w-sm mt-4 bg-gray-900/60 border border-gray-800/80 rounded-2xl p-3 flex items-center justify-between backdrop-blur-md">
-    <div class="text-[11px] font-mono text-gray-400">
-      <span class="text-yellow-400 font-bold block">SIMULADOR</span>
-      Toca una casilla o pulsa:
+  <!-- Panel de control interactivo (Simulador para el negocio) -->
+  <aside class="w-full max-w-sm mt-3 glass-inner rounded-2xl p-2.5 flex items-center justify-between z-10 shadow-sm">
+    <div class="text-[10px] font-mono-tech text-slate-600 pl-2">
+      <span class="font-bold text-slate-900 block">SIMULADOR</span>
+      Toca casillas o añade:
     </div>
-    <div class="flex gap-2">
-      <button onclick="addStamp()" class="bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-xs px-3 py-1.5 rounded-xl shadow transition-all active:scale-95">
-        + Sellar
+    <div class="flex gap-1.5">
+      <button onclick="addStamp()" class="bg-slate-900 hover:bg-black text-[#a3e635] font-mono-tech font-bold text-[11px] px-3 py-1.5 rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-1">
+        + SELLAR
       </button>
-      <button onclick="resetStamps()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs px-2.5 py-1.5 rounded-xl border border-gray-700 transition-all active:scale-95">
-        Reiniciar
+      <button onclick="resetStamps()" class="glass-card hover:bg-white/60 text-slate-600 text-[11px] px-2.5 py-1.5 rounded-xl transition-all active:scale-95 font-mono-tech">
+        LIMPIAR
       </button>
     </div>
   </aside>
 
-  <!-- Botón nativo de instalación para Android -->
-  <button id="btn-install" class="hidden mt-4 bg-gradient-to-r from-yellow-500 to-amber-400 hover:from-yellow-400 hover:to-amber-300 text-gray-950 font-black py-3 px-6 rounded-2xl shadow-xl w-full max-w-sm transition-all transform active:scale-95 uppercase tracking-wider text-xs flex items-center justify-center gap-2">
-    <span>Guardar Tarjeta Oficial</span>
+  <!-- Botón nativo de instalación -->
+  <button id="btn-install" class="hidden mt-3 bg-slate-900 hover:bg-black text-white font-bold py-3 px-6 rounded-2xl shadow-xl w-full max-w-sm transition-all transform active:scale-95 text-xs font-mono-tech tracking-wider uppercase flex items-center justify-center gap-2 z-10 border border-slate-700">
+    <span>Guardar en Pantalla de Inicio</span>
   </button>
 
-  <!-- Banner guiado para iPhone (Safari) -->
-  <div id="ios-guide" class="hidden mt-4 bg-gray-900/90 border border-yellow-500/40 text-gray-200 p-4 rounded-2xl max-w-sm text-center text-xs shadow-xl">
-    <p class="font-bold text-yellow-400">¿Guardar esta tarjeta en tu iPhone?</p>
-    <p class="mt-1 text-gray-400">
-      Pulsa el botón <span class="font-bold text-white underline">Compartir</span> abajo y luego selecciona <span class="font-bold text-white underline">Añadir a pantalla de inicio</span>.
+  <!-- Banner guiado para iOS Safari -->
+  <div id="ios-guide" class="hidden mt-3 glass-inner text-slate-700 p-3.5 rounded-2xl max-w-sm text-center text-xs shadow-md z-10">
+    <p class="font-bold text-slate-900">¿Instalar tarjeta en iPhone?</p>
+    <p class="mt-1 text-[11px] text-slate-600">
+      Toca <span class="font-bold text-slate-900 underline">Compartir</span> abajo y selecciona <span class="font-bold text-slate-900 underline">Añadir a pantalla de inicio</span>.
     </p>
   </div>
 
   <script>
-    // Registro del Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js');
       });
     }
 
-    // Configuración de Identidad y Almacenamiento Persistente
     const TOTAL_STAMPS = 6;
     let customerId = localStorage.getItem('loyalty_customer_id');
     if (!customerId) {
-      customerId = 'VIP-' + Math.floor(100000 + Math.random() * 900000);
+      customerId = 'ARC-' + Math.floor(100000 + Math.random() * 900000);
       localStorage.setItem('loyalty_customer_id', customerId);
     }
-    document.getElementById('customer-id-tag').innerText = 'ID: ' + customerId;
+    document.getElementById('customer-id-tag').innerText = 'UID: ' + customerId;
 
     let currentStamps = parseInt(localStorage.getItem('loyalty_stamps') || '0');
 
-    // Generación del Código QR Único del Cliente
     new QRCode(document.getElementById("qrcode-box"), {
-      text: "https://tarjeta-club.pages.dev/?cliente=" + customerId,
-      width: 130,
-      height: 130,
-      colorDark: "#000000",
+      text: "https://tarjeta-club.pages.dev/?uid=" + customerId,
+      width: 120,
+      height: 120,
+      colorDark: "#0f172a",
       colorLight: "#ffffff",
       correctLevel: QRCode.CorrectLevel.H
     });
 
-    // Renderizado de las casillas de sellos
     function renderStamps() {
       const grid = document.getElementById('stamp-grid');
       const counter = document.getElementById('stamp-counter');
@@ -158,43 +203,45 @@
         const box = document.createElement('div');
         box.onclick = () => toggleStamp(i);
 
-        box.className = `h-20 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 cursor-pointer select-none relative overflow-hidden ${
+        box.className = `h-20 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 cursor-pointer select-none relative ${
           isStamped 
-            ? 'bg-gradient-to-b from-yellow-500/25 to-yellow-600/10 border-2 border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.3)] scale-[1.02]' 
-            : 'bg-[#12131b]/80 border border-dashed border-gray-700/80 hover:border-gray-500'
+            ? 'stamp-active scale-[1.02]' 
+            : isPrize 
+              ? 'stamp-prize' 
+              : 'stamp-empty hover:bg-white/30'
         }`;
 
         if (isStamped) {
           box.innerHTML = `
-            <span class="text-2xl filter drop-shadow-[0_0_8px_rgba(234,179,8,0.8)]">${isPrize ? '👑' : '🔥'}</span>
-            <span class="text-[9px] font-black text-yellow-300 font-mono tracking-widest mt-1">SELLADO</span>
+            <span class="text-xl filter drop-shadow font-black text-slate-950 font-mono-tech">✓</span>
+            <span class="text-[9px] font-black text-slate-950 font-mono-tech tracking-widest mt-1">SELLADO</span>
           `;
         } else if (isPrize) {
           box.innerHTML = `
-            <span class="text-2xl opacity-60">🎁</span>
-            <span class="text-[9px] font-black text-yellow-500/70 font-mono tracking-widest mt-1">REGALO</span>
+            <span class="text-xl opacity-70">✦</span>
+            <span class="text-[9px] font-bold text-slate-700 font-mono-tech tracking-widest mt-1">REGLO</span>
           `;
         } else {
           box.innerHTML = `
-            <span class="text-lg font-mono font-bold text-gray-600">${i}</span>
+            <span class="text-sm font-mono-tech font-bold text-slate-400">${i}</span>
           `;
         }
         grid.appendChild(box);
       }
 
+      const qrLabel = document.getElementById('qr-label');
       if (currentStamps === TOTAL_STAMPS) {
-        document.getElementById('qr-label').innerHTML = '<span class="text-emerald-400 font-bold">¡PREMIO DESBLOQUEADO! RECLAMA TU CONSUMO</span>';
+        qrLabel.innerHTML = '<span class="text-emerald-600 font-bold">¡PREMIO DESBLOQUEADO! RECLAMA AQUÍ</span>';
       } else {
-        document.getElementById('qr-label').innerText = 'PRESENTA EN CAJA AL CONSUMIR';
+        qrLabel.innerText = 'ESCANEAR EN MOSTRADOR';
       }
     }
 
-    // Funciones para interactuar con los sellos
     function addStamp() {
       if (currentStamps < TOTAL_STAMPS) {
         currentStamps++;
         localStorage.setItem('loyalty_stamps', currentStamps);
-        if (navigator.vibrate) navigator.vibrate(60);
+        if (navigator.vibrate) navigator.vibrate(50);
         renderStamps();
       }
     }
@@ -213,11 +260,10 @@
     function resetStamps() {
       currentStamps = 0;
       localStorage.setItem('loyalty_stamps', '0');
-      if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+      if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
       renderStamps();
     }
 
-    // Detección de Instalación Android / iOS
     let deferredPrompt;
     const installButton = document.getElementById('btn-install');
     const iosBanner = document.getElementById('ios-guide');
@@ -246,7 +292,6 @@
       iosBanner.classList.remove('hidden');
     }
 
-    // Inicializar visualización
     renderStamps();
   </script>
 </body>
