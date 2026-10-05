@@ -188,6 +188,15 @@
       <p class="text-[10px] font-tech text-slate-400 uppercase tracking-wider text-center">Apunta al código QR del cliente</p>
     </div>
 
+    <!-- Buscador manual de respaldo -->
+    <div class="titanium-card p-3 rounded-2xl flex gap-2">
+      <input type="text" id="manual-uid-input" placeholder="O escribe el UID (Ej. AU-123456)" 
+             class="flex-1 bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none uppercase font-mono">
+      <button onclick="searchManualUid()" class="bg-white/10 hover:bg-white/20 text-white font-tech text-xs px-3 py-2 rounded-xl border border-white/10 transition-all">
+        Buscar
+      </button>
+    </div>
+
     <!-- Ficha del cliente sincronizado desde la nube -->
     <div id="staff-client-card" class="hidden titanium-card p-5 rounded-3xl flex flex-col gap-4">
       <div>
@@ -209,6 +218,18 @@
           Canjear
         </button>
       </div>
+
+      <!-- Envío de Notificación Directa al Cliente -->
+      <div class="border-t border-white/10 pt-3 flex flex-col gap-2">
+        <span class="text-[9px] font-tech text-slate-400 uppercase tracking-wider block">Notificación a este cliente</span>
+        <input type="text" id="target-push-title" placeholder="Título (Ej. ¡Sello agregado!)" 
+               class="w-full bg-black/50 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none">
+        <input type="text" id="target-push-body" placeholder="Mensaje para el teléfono del cliente" 
+               class="w-full bg-black/50 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none">
+        <button onclick="sendPushToClient()" class="w-full bg-white/10 hover:bg-white/20 text-white font-tech text-xs uppercase py-2 rounded-lg border border-white/10 transition-all">
+          Enviar Notificación al Celular del Cliente
+        </button>
+      </div>
     </div>
   </section>
 
@@ -218,8 +239,14 @@
   </footer>
 
   <script>
+    let swRegistration = null;
+
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+          swRegistration = reg;
+        });
+      });
     }
 
     const MAX_STAMPS = 6;
@@ -228,6 +255,7 @@
     let currentCustomer = null;
     let targetCustomer = null;
     let syncIntervalId = null;
+    let lastHandledNotificationId = 0;
 
     function showView(viewId) {
       const views = ['view-portal', 'view-register', 'view-staff-auth', 'view-client-card', 'view-staff-dashboard'];
@@ -240,18 +268,36 @@
       }
     }
 
-    function goToClientPortal() {
+    async function goToClientPortal() {
       const saved = localStorage.getItem('aura_customer_profile');
       if (saved) {
         currentCustomer = JSON.parse(saved);
         renderCustomerCard();
+        await verifyOrRegisterInCloud();
         startCloudSync();
       } else {
         showView('view-register');
       }
     }
 
-    // Registro del cliente conectado a Cloudflare KV
+    async function verifyOrRegisterInCloud() {
+      if (!currentCustomer || !currentCustomer.uid) return;
+      try {
+        const check = await fetch('/api/sync?uid=' + currentCustomer.uid);
+        if (!check.ok) {
+          await fetch('/api/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              uid: currentCustomer.uid,
+              action: 'REGISTER',
+              customerData: currentCustomer
+            })
+          });
+        }
+      } catch (e) {}
+    }
+
     async function handleRegister(e) {
       e.preventDefault();
       const btn = document.getElementById('btn-submit-reg');
@@ -281,17 +327,21 @@
         });
 
         localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
+
+        if ("Notification" in window && Notification.permission !== "granted") {
+          Notification.requestPermission();
+        }
+
         renderCustomerCard();
         startCloudSync();
       } catch (err) {
-        alert("Error al conectar con la base de datos: " + err.message);
+        alert("Error de conexión: " + err.message);
       } finally {
         btn.innerText = "Generar Mi Tarjeta";
         btn.disabled = false;
       }
     }
 
-    // Dibujar tarjeta del cliente
     function renderCustomerCard() {
       showView('view-client-card');
 
@@ -348,7 +398,6 @@
       }
     }
 
-    // Sondeo en segundo plano: consulta a la nube cada 2.5 segundos
     function startCloudSync() {
       if (syncIntervalId) clearInterval(syncIntervalId);
 
@@ -358,15 +407,34 @@
           const res = await fetch('/api/sync?uid=' + currentCustomer.uid);
           if (res.ok) {
             const data = await res.json();
+
             if (data.stamps !== currentCustomer.stamps) {
               currentCustomer.stamps = data.stamps;
               localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
               if (navigator.vibrate) navigator.vibrate(80);
               renderCustomerCard();
             }
+
+            if (data.pendingNotification && data.pendingNotification.id !== lastHandledNotificationId) {
+              lastHandledNotificationId = data.pendingNotification.id;
+              triggerClientLocalNotification(data.pendingNotification.title, data.pendingNotification.body);
+            }
           }
         } catch (e) {}
-      }, 2500);
+      }, 2000);
+    }
+
+    function triggerClientLocalNotification(title, body) {
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      if (swRegistration && "showNotification" in swRegistration) {
+        swRegistration.showNotification(title, {
+          body: body,
+          icon: '/icon-192.png',
+          badge: '/icon-192.png'
+        });
+      } else if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(title, { body: body, icon: '/icon-192.png' });
+      }
     }
 
     function logoutCustomer() {
@@ -423,9 +491,20 @@
       }
     }
 
-    // Detección del QR y consulta en la base de datos de Cloudflare
+    function searchManualUid() {
+      const val = document.getElementById('manual-uid-input').value.trim();
+      if (val) {
+        onBarcodeDetected(val);
+      }
+    }
+
     async function onBarcodeDetected(rawUid) {
-      const cleanUid = rawUid.trim();
+      let cleanUid = rawUid.trim();
+
+      try {
+        const parsed = JSON.parse(cleanUid);
+        if (parsed.uid) cleanUid = parsed.uid;
+      } catch (e) {}
 
       try {
         const res = await fetch('/api/sync?uid=' + cleanUid);
@@ -444,7 +523,6 @@
       }
     }
 
-    // Sellar cliente directamente en la nube
     async function applyStampCloud() {
       if (!targetCustomer) return;
       const btn = document.getElementById('btn-add-stamp');
@@ -472,7 +550,6 @@
       }
     }
 
-    // Canjear recompensa en la nube
     async function redeemRewardCloud() {
       if (!targetCustomer) return;
       if (targetCustomer.stamps < MAX_STAMPS) {
@@ -500,7 +577,37 @@
       }
     }
 
-    // Comprobación inicial de perfil
+    async function sendPushToClient() {
+      if (!targetCustomer) return;
+      const title = document.getElementById('target-push-title').value.trim();
+      const body = document.getElementById('target-push-body').value.trim();
+
+      if (!title || !body) {
+        alert("Escribe el título y el mensaje");
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            uid: targetCustomer.uid,
+            action: 'SEND_NOTIFICATION',
+            notification: { title, body }
+          })
+        });
+
+        if (res.ok) {
+          alert("Notificación enviada al teléfono de " + targetCustomer.name);
+          document.getElementById('target-push-title').value = '';
+          document.getElementById('target-push-body').value = '';
+        }
+      } catch (err) {
+        alert("Error al enviar notificación: " + err.message);
+      }
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       const saved = localStorage.getItem('aura_customer_profile');
       if (saved) {
