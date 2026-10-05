@@ -3,306 +3,338 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>AURA // Private Pass</title>
+  <title>AURA // Club de Lealtad</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="AURA Pass">
   <link rel="apple-touch-icon" href="/icon-192.png">
 
-  <!-- Frameworks y Librerías -->
+  <!-- Frameworks & Librerías -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
 
-  <!-- Tipografía de Lujo Suizo -->
+  <!-- Tipografía -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 
   <style>
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-    .font-tech {
-      font-family: 'Space Grotesk', sans-serif;
-    }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-tech { font-family: 'Space Grotesk', sans-serif; }
     .titanium-card {
-      background: radial-gradient(140% 120% at 50% 0%, #161922 0%, #0a0b0e 100%);
+      background: radial-gradient(140% 120% at 50% 0%, #151821 0%, #090a0d 100%);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 1px 1px 0 rgba(255, 255, 255, 0.2);
-    }
-    .metallic-badge {
-      background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 50%, #475569 100%);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 1px 1px 0 rgba(255, 255, 255, 0.15);
     }
     .stamp-filled {
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      box-shadow: 0 0 15px rgba(255, 255, 255, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
     }
     .stamp-empty {
       background: rgba(255, 255, 255, 0.02);
       border: 1px dashed rgba(255, 255, 255, 0.12);
     }
+    #scanner-video video {
+      object-fit: cover !important;
+      border-radius: 1.25rem;
+    }
   </style>
 </head>
-<body class="bg-[#060709] text-slate-100 min-h-screen flex flex-col items-center justify-between p-4 selection:bg-white selection:text-black">
+<body class="bg-[#050608] text-slate-100 min-h-screen flex flex-col items-center justify-between p-4 selection:bg-white selection:text-black">
 
-  <!-- ========================================== -->
-  <!-- 1. VISTA: REGISTRO OBLIGATORIO DE CLIENTE -->
-  <!-- ========================================== -->
-  <div id="view-onboarding" class="hidden w-full max-w-sm my-auto flex flex-col gap-6">
+  <!-- ======================================================== -->
+  <!-- VISTA 1: PORTAL DE SELECCIÓN DE ENTORNO (CLIENTE / STAFF) -->
+  <!-- ======================================================== -->
+  <section id="view-portal" class="w-full max-w-sm my-auto flex flex-col gap-6">
     <div class="text-center">
-      <span class="text-[10px] font-tech tracking-[0.3em] text-slate-400 uppercase font-semibold">Club Exclusivo</span>
-      <h1 class="text-3xl font-extrabold text-white mt-1">Únete a AURA</h1>
-      <p class="text-xs text-slate-400 mt-2">Registra tu pase personal para comenzar a acumular beneficios y recompensas exclusivas.</p>
+      <span class="text-[10px] font-tech tracking-[0.3em] text-slate-400 uppercase font-semibold">Sistema de Membresías</span>
+      <h1 class="text-3xl font-extrabold text-white mt-1">AURA CLUB</h1>
+      <p class="text-xs text-slate-400 mt-1">Selecciona el tipo de acceso para continuar</p>
     </div>
 
-    <form onsubmit="handleCustomerRegister(event)" class="titanium-card p-6 rounded-3xl flex flex-col gap-4">
+    <div class="flex flex-col gap-3">
+      <!-- Tarjeta Acceso Cliente -->
+      <button onclick="goToClientPortal()" class="titanium-card p-5 rounded-2xl flex items-center justify-between text-left hover:border-white/30 transition-all active:scale-[0.98]">
+        <div>
+          <span class="text-base font-bold text-white block">Soy Cliente</span>
+          <span class="text-xs text-slate-400">Ver mis sellos acumulados y mi código QR</span>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white">
+          →
+        </div>
+      </button>
+
+      <!-- Tarjeta Acceso Trabajador -->
+      <button onclick="showView('view-staff-auth')" class="titanium-card p-5 rounded-2xl flex items-center justify-between text-left hover:border-white/30 transition-all active:scale-[0.98]">
+        <div>
+          <span class="text-base font-bold text-white block">Soy Trabajador</span>
+          <span class="text-xs text-slate-400">Escanear clientes, sellar visitas y avisos</span>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400">
+          🔒
+        </div>
+      </button>
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- VISTA 2: FORMULARIO DE REGISTRO PARA CLIENTES NUEVOS     -->
+  <!-- ======================================================== -->
+  <section id="view-register" class="hidden w-full max-w-sm my-auto flex flex-col gap-5">
+    <div class="text-center">
+      <span class="text-[10px] font-tech tracking-[0.3em] text-slate-400 uppercase font-semibold">Pase Único</span>
+      <h2 class="text-2xl font-bold text-white mt-1">Alta de Miembro</h2>
+      <p class="text-xs text-slate-400 mt-1">Tus datos quedarán guardados permanentemente en tu tarjeta</p>
+    </div>
+
+    <form onsubmit="handleRegister(event)" class="titanium-card p-6 rounded-3xl flex flex-col gap-4">
       <div>
-        <label class="text-[11px] font-tech text-slate-300 uppercase tracking-wider block mb-1.5">Nombre Completo</label>
-        <input type="text" id="reg-name" required placeholder="Ej. Carlos Mendoza" 
-               class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-white/40 transition-all">
+        <label class="text-[11px] font-tech text-slate-300 uppercase tracking-wider block mb-1">Nombre Completo</label>
+        <input type="text" id="reg-name" required placeholder="Tu nombre" 
+               class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-white/40">
       </div>
       <div>
-        <label class="text-[11px] font-tech text-slate-300 uppercase tracking-wider block mb-1.5">Correo Electrónico</label>
-        <input type="email" id="reg-email" required placeholder="carlos@ejemplo.com" 
-               class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-white/40 transition-all">
+        <label class="text-[11px] font-tech text-slate-300 uppercase tracking-wider block mb-1">Correo Electrónico</label>
+        <input type="email" id="reg-email" required placeholder="tucorreo@ejemplo.com" 
+               class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-white/40">
       </div>
-      <button type="submit" class="mt-2 w-full bg-white hover:bg-slate-200 text-black font-tech font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl shadow-lg transition-all active:scale-95">
-        Generar Mi Pase Personal
+      <button type="submit" class="mt-2 w-full bg-white hover:bg-slate-200 text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl shadow-lg transition-all active:scale-95">
+        Generar Mi Tarjeta
       </button>
     </form>
-  </div>
+    <button onclick="showView('view-portal')" class="text-xs text-slate-500 hover:text-white text-center">Volver al inicio</button>
+  </section>
 
-  <!-- ========================================== -->
-  <!-- 2. VISTA: PASE DEL CLIENTE (SIN AUTO-SELLO) -->
-  <!-- ========================================== -->
-  <div id="view-client" class="hidden w-full max-w-sm flex flex-col items-center gap-5 my-auto">
-    
-    <!-- Encabezado superior -->
+  <!-- ======================================================== -->
+  <!-- VISTA 3: AUTENTICACIÓN CON PIN DE 6 DÍGITOS TRABAJADOR   -->
+  <!-- ======================================================== -->
+  <section id="view-staff-auth" class="hidden w-full max-w-sm my-auto flex flex-col gap-5">
+    <div class="text-center">
+      <span class="text-[10px] font-tech tracking-[0.3em] text-slate-400 uppercase font-semibold">Acceso Restringido</span>
+      <h2 class="text-2xl font-bold text-white mt-1">Terminal de Personal</h2>
+      <p class="text-xs text-slate-400 mt-1">Ingresa el NIP de 6 dígitos del negocio</p>
+    </div>
+
+    <div class="titanium-card p-6 rounded-3xl flex flex-col gap-4">
+      <input type="password" id="staff-pin-input" maxlength="6" inputmode="numeric" placeholder="••••••" 
+             class="w-full bg-black/60 border border-white/20 rounded-xl py-3 text-center text-2xl tracking-[0.5em] text-white focus:outline-none focus:border-white/50">
+      <button onclick="verifyStaffPIN()" class="w-full bg-white hover:bg-slate-200 text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl shadow transition-all active:scale-95">
+        Ingresar a Terminal
+      </button>
+      <p class="text-[10px] text-center text-slate-500 font-tech">PIN por defecto: 123456</p>
+    </div>
+    <button onclick="showView('view-portal')" class="text-xs text-slate-500 hover:text-white text-center">Volver al inicio</button>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- VISTA 4: TARJETA EXCLUSIVA DEL CLIENTE (PERMANENTE)     -->
+  <!-- ======================================================== -->
+  <section id="view-client-card" class="hidden w-full max-w-sm flex flex-col items-center gap-5 my-auto">
     <header class="w-full flex items-center justify-between px-1">
       <div class="flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></span>
-        <span class="text-[10px] font-tech tracking-widest text-slate-400 uppercase font-semibold">Membresía Activa</span>
+        <span class="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]"></span>
+        <span class="text-[10px] font-tech tracking-widest text-slate-400 uppercase font-semibold">Membresía Guardada</span>
       </div>
-      <span class="text-[10px] font-tech text-slate-500 tracking-wider" id="client-uid">UID: ----</span>
+      <button onclick="logoutCustomer()" class="text-[10px] font-tech text-slate-500 hover:text-red-400 transition-colors uppercase">
+        Cerrar Sesión
+      </button>
     </header>
 
-    <!-- Tarjeta de Titanio -->
-    <main class="w-full titanium-card rounded-[2.2rem] p-6 relative overflow-hidden flex flex-col gap-6">
-      
-      <!-- Detalle superior de la tarjeta -->
+    <main class="w-full titanium-card rounded-[2.2rem] p-6 relative flex flex-col gap-5">
       <div class="flex items-start justify-between">
         <div>
-          <span class="text-[9px] font-tech tracking-[0.25em] text-slate-400 uppercase font-bold block">Digital Loyalty Card</span>
-          <h2 class="text-xl font-extrabold text-white mt-0.5 tracking-tight" id="client-display-name">Miembro AURA</h2>
-          <p class="text-[11px] text-slate-400 font-mono" id="client-display-email">correo@cliente.com</p>
+          <span class="text-[9px] font-tech tracking-[0.25em] text-slate-400 uppercase font-bold block">Pase Personal</span>
+          <h2 class="text-xl font-extrabold text-white mt-0.5 tracking-tight" id="client-name-display">Nombre</h2>
+          <p class="text-[11px] text-slate-400 font-mono" id="client-email-display">correo@ejemplo.com</p>
         </div>
-        <!-- Emblema de titanio -->
-        <div class="w-9 h-9 rounded-xl metallic-badge p-[1px] shadow-lg flex items-center justify-center">
-          <div class="w-full h-full bg-[#0d0e12] rounded-[11px] flex items-center justify-center">
-            <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-            </svg>
-          </div>
+        <div class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center font-bold text-xs text-white">
+          ✦
         </div>
       </div>
 
-      <!-- Barra de progreso minimalista -->
+      <!-- Barra de progreso -->
       <div>
         <div class="flex justify-between items-center text-[10px] font-tech mb-2">
-          <span class="text-slate-400 tracking-wider uppercase">Progreso de Visitas</span>
-          <span class="text-white font-bold tracking-wider" id="client-counter">0 / 6 SELLOS</span>
+          <span class="text-slate-400 uppercase tracking-wider">Progreso</span>
+          <span class="text-white font-bold" id="client-stamp-counter">0 / 6 SELLOS</span>
         </div>
         <div class="w-full bg-white/5 rounded-full h-1.5 overflow-hidden p-[1px] border border-white/10">
-          <div id="client-progress" class="bg-gradient-to-r from-slate-400 via-slate-100 to-white h-full rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+          <div id="client-progress-bar" class="bg-gradient-to-r from-slate-400 via-slate-100 to-white h-full rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
         </div>
       </div>
 
-      <!-- Cuadrícula de 6 Sellos (Visualización protegida) -->
-      <section id="client-grid" class="grid grid-cols-3 gap-3">
-        <!-- Generado dinámicamente -->
-      </section>
+      <!-- Cuadrícula protegida de 6 sellos -->
+      <div id="client-stamps-grid" class="grid grid-cols-3 gap-3"></div>
 
-      <!-- Código QR Personal para Presentar en Caja -->
-      <div class="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center shadow-inner">
-        <div class="bg-white p-2 rounded-xl" id="qrcode-box"></div>
-        <span class="text-[10px] font-tech text-slate-300 tracking-wider font-bold mt-3 uppercase text-center" id="qr-status-text">
-          Presentar en caja para recibir sello
+      <!-- QR Individual del cliente -->
+      <div class="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center">
+        <div class="bg-white p-2.5 rounded-xl shadow-md" id="qrcode-target"></div>
+        <span class="text-[10px] font-tech text-slate-300 tracking-wider font-bold mt-3 uppercase text-center" id="client-status-note">
+          Presentar este QR en caja
         </span>
-        <p class="text-[9px] text-slate-500 mt-0.5">El dependiente escaneará tu código desde su terminal</p>
+        <span class="text-[9px] font-mono text-slate-500 mt-0.5" id="client-uid-tag">UID: ----</span>
       </div>
     </main>
 
-    <!-- Botón para instalar en pantalla de inicio -->
-    <button id="btn-install" class="hidden w-full bg-white hover:bg-slate-200 text-black font-tech font-bold text-xs uppercase tracking-wider py-3.5 rounded-2xl shadow-xl transition-all active:scale-95">
-      Guardar Tarjeta en Teléfono
+    <!-- Botón de instalación -->
+    <button id="btn-install" class="hidden w-full bg-white hover:bg-slate-200 text-black font-tech font-bold text-xs uppercase py-3.5 rounded-2xl shadow-xl transition-all active:scale-95">
+      Guardar Tarjeta en el Celular
     </button>
+  </section>
 
-    <!-- Guía Safari iOS -->
-    <div id="ios-guide" class="hidden w-full bg-white/5 border border-white/10 text-slate-300 p-3.5 rounded-2xl text-center text-xs">
-      <p class="font-bold text-white">¿Guardar tarjeta en tu iPhone?</p>
-      <p class="mt-1 text-[11px] text-slate-400">
-        Toca <span class="text-white font-semibold underline">Compartir</span> abajo y elige <span class="text-white font-semibold underline">Añadir a pantalla de inicio</span>.
-      </p>
-    </div>
-  </div>
-
-  <!-- ========================================== -->
-  <!-- 3. VISTA: TERMINAL DE EMPLEADOS / NEGOCIO -->
-  <!-- ========================================== -->
-  <div id="view-staff" class="hidden w-full max-w-sm flex flex-col gap-5 my-auto">
+  <!-- ======================================================== -->
+  <!-- VISTA 5: TERMINAL DE TRABAJADOR CON CÁMARA DIRECTA      -->
+  <!-- ======================================================== -->
+  <section id="view-staff-dashboard" class="hidden w-full max-w-sm flex flex-col gap-4 my-auto">
     <header class="flex items-center justify-between px-1">
       <div>
-        <span class="text-[10px] font-tech tracking-widest text-cyan-400 uppercase font-semibold block">Terminal Autorizada</span>
+        <span class="text-[10px] font-tech tracking-widest text-slate-400 uppercase font-semibold block">Terminal Activa</span>
         <h2 class="text-xl font-bold text-white">Lector de Mostrador</h2>
       </div>
-      <button onclick="exitStaffMode()" class="text-xs font-tech text-slate-400 hover:text-white px-2.5 py-1 border border-white/10 rounded-lg">
-        Salir
+      <button onclick="stopCameraAndExit()" class="text-xs font-tech text-slate-400 hover:text-white px-3 py-1.5 border border-white/10 rounded-xl">
+        Cerrar Turno
       </button>
     </header>
 
-    <!-- Escáner de Cámara Integrado -->
+    <!-- Contenedor de cámara nativa directa -->
     <div class="titanium-card p-4 rounded-3xl flex flex-col items-center gap-3">
-      <div id="reader" class="w-full rounded-2xl overflow-hidden bg-black aspect-square border border-white/10"></div>
-      <p class="text-[10px] font-tech text-slate-400 text-center uppercase tracking-wider">Apunta la cámara al código QR del cliente</p>
+      <div id="scanner-video" class="w-full aspect-square bg-black rounded-2xl overflow-hidden border border-white/10 flex items-center justify-center text-xs text-slate-500">
+        Iniciando cámara...
+      </div>
+      <p class="text-[10px] font-tech text-slate-400 uppercase tracking-wider text-center">Apunta la cámara al código QR del cliente</p>
     </div>
 
-    <!-- Ficha del Cliente Escaneado -->
-    <div id="staff-client-result" class="hidden titanium-card p-5 rounded-3xl flex flex-col gap-4">
+    <!-- Información del cliente escaneado -->
+    <div id="staff-client-card" class="hidden titanium-card p-5 rounded-3xl flex flex-col gap-4">
       <div>
-        <span class="text-[9px] font-tech text-slate-500 uppercase tracking-widest block">Cliente Detectado</span>
-        <h3 class="text-lg font-bold text-white" id="staff-name">Nombre</h3>
-        <p class="text-xs text-slate-400 font-mono" id="staff-email">correo@ejemplo.com</p>
+        <span class="text-[9px] font-tech text-slate-400 uppercase tracking-widest block">Cliente Identificado</span>
+        <h3 class="text-lg font-bold text-white" id="scanned-client-name">---</h3>
+        <p class="text-xs text-slate-400 font-mono" id="scanned-client-email">---</p>
       </div>
 
       <div class="flex items-center justify-between bg-black/40 p-3 rounded-xl border border-white/5">
         <span class="text-xs font-tech text-slate-300">Sellos Acumulados</span>
-        <span class="text-lg font-bold text-white font-tech" id="staff-stamps">0 / 6</span>
+        <span class="text-lg font-bold text-white font-tech" id="scanned-client-stamps">0 / 6</span>
       </div>
 
       <div class="flex gap-2">
-        <button onclick="staffAddStamp()" class="flex-1 bg-white hover:bg-slate-200 text-black font-tech font-bold text-xs uppercase py-3 rounded-xl transition-all active:scale-95 shadow">
-          + Aplicar Sello
+        <button onclick="applyStampToScanned()" class="flex-1 bg-white hover:bg-slate-200 text-black font-tech font-bold text-xs uppercase py-3 rounded-xl transition-all active:scale-95 shadow">
+          + Poner Sello
         </button>
-        <button onclick="staffRedeemReward()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-tech font-bold text-xs uppercase px-4 py-3 rounded-xl border border-white/10 transition-all active:scale-95">
+        <button onclick="redeemRewardScanned()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-tech font-bold text-xs uppercase px-4 py-3 rounded-xl border border-white/10 transition-all active:scale-95">
           Canjear
         </button>
       </div>
     </div>
 
-    <!-- Módulo de Notificaciones Promocionales -->
-    <div class="titanium-card p-5 rounded-3xl flex flex-col gap-3">
-      <span class="text-[10px] font-tech text-slate-400 uppercase tracking-widest font-semibold block">Difusión Push</span>
-      <input type="text" id="push-title" placeholder="Título (ej. 2x1 en Barra)" 
-             class="w-full bg-black/50 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none">
-      <textarea id="push-message" placeholder="Mensaje para los clientes del club..." rows="2" 
-                class="w-full bg-black/50 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none"></textarea>
-      <button onclick="sendBroadcastPush()" class="w-full bg-white/10 hover:bg-white/20 text-white font-tech text-xs uppercase py-2.5 rounded-xl border border-white/10 transition-all">
-        Enviar Notificación al Móvil
+    <!-- Módulo de Notificaciones Push -->
+    <div class="titanium-card p-4 rounded-3xl flex flex-col gap-3">
+      <span class="text-[10px] font-tech text-slate-400 uppercase tracking-widest font-semibold block">Avisos Push</span>
+      <input type="text" id="push-title" placeholder="Título de la alerta" 
+             class="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none">
+      <textarea id="push-desc" placeholder="Mensaje para los clientes del club..." rows="2" 
+                class="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none"></textarea>
+      <button onclick="dispatchPushNotification()" class="w-full bg-white/10 hover:bg-white/20 text-white font-tech text-xs uppercase py-2.5 rounded-xl border border-white/10 transition-all">
+        Disparar Notificación al Dispositivo
       </button>
     </div>
-  </div>
+  </section>
 
-  <!-- Pie de Navegación Discreta -->
-  <footer class="w-full max-w-sm pt-4 pb-2 flex justify-between items-center text-[10px] font-tech text-slate-600 border-t border-white/5">
-    <span>AURA SYSTEMS // V2.0</span>
-    <button onclick="openStaffAccess()" class="hover:text-slate-400 uppercase tracking-wider transition-colors">
-      Acceso Personal
-    </button>
+  <!-- Pie institucional -->
+  <footer class="w-full max-w-sm pt-4 pb-2 text-center text-[10px] font-tech text-slate-600 border-t border-white/5">
+    AURA LUXURY PASS // TECNOLOGÍA NFC & PWA
   </footer>
 
-  <!-- Lógica Integral de la Plataforma -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
     }
 
     const MAX_STAMPS = 6;
-    const STAFF_PIN = "1234";
-    let activeCustomer = null;
-    let html5QrScanner = null;
+    const STAFF_PIN = "123456";
+    let qrReaderInstance = null;
+    let currentCustomer = null;
+    let targetCustomer = null;
 
-    // Inicialización de la sesión
-    function initApp() {
-      const stored = localStorage.getItem('aura_customer_session');
-      if (stored) {
-        activeCustomer = JSON.parse(stored);
-        renderClientView();
-      } else {
-        showView('view-onboarding');
-      }
-    }
-
+    // Control de Vistas
     function showView(viewId) {
-      document.getElementById('view-onboarding').classList.add('hidden');
-      document.getElementById('view-client').classList.add('hidden');
-      document.getElementById('view-staff').classList.add('hidden');
+      const views = ['view-portal', 'view-register', 'view-staff-auth', 'view-client-card', 'view-staff-dashboard'];
+      views.forEach(id => document.getElementById(id).classList.add('hidden'));
       document.getElementById(viewId).classList.remove('hidden');
     }
 
-    // Registro de Cliente
-    function handleCustomerRegister(e) {
+    // Ruta de acceso para clientes (Comprueba si ya tiene sesión fija)
+    function goToClientPortal() {
+      const saved = localStorage.getItem('aura_customer_profile');
+      if (saved) {
+        currentCustomer = JSON.parse(saved);
+        // Sincronizar sellos con la base local
+        const record = localStorage.getItem('aura_user_' + currentCustomer.uid);
+        if (record) currentCustomer = JSON.parse(record);
+        renderCustomerCard();
+      } else {
+        showView('view-register');
+      }
+    }
+
+    // Registro de cliente
+    function handleRegister(e) {
       e.preventDefault();
       const name = document.getElementById('reg-name').value.trim();
       const email = document.getElementById('reg-email').value.trim();
       const uid = 'AU-' + Math.floor(100000 + Math.random() * 900000);
 
-      activeCustomer = {
+      currentCustomer = {
         uid: uid,
         name: name,
         email: email,
-        stamps: 0,
-        registeredAt: new Date().toISOString()
+        stamps: 0
       };
 
-      saveCustomer(activeCustomer);
+      // Guardar sesión persistente del cliente
+      localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
+      // Guardar en la base de datos de usuarios
+      localStorage.setItem('aura_user_' + uid, JSON.stringify(currentCustomer));
 
       if ("Notification" in window && Notification.permission !== "granted") {
         Notification.requestPermission();
       }
 
-      renderClientView();
+      renderCustomerCard();
     }
 
-    function saveCustomer(customer) {
-      localStorage.setItem('aura_customer_session', JSON.stringify(customer));
-      // Guardar también en el registro global para lectura del negocio
-      localStorage.setItem('aura_db_' + customer.uid, JSON.stringify(customer));
-    }
+    // Dibujar tarjeta del cliente
+    function renderCustomerCard() {
+      showView('view-client-card');
 
-    // Renderizar Tarjeta del Cliente
-    function renderClientView() {
-      showView('view-client');
+      document.getElementById('client-name-display').innerText = currentCustomer.name;
+      document.getElementById('client-email-display').innerText = currentCustomer.email;
+      document.getElementById('client-stamp-counter').innerText = currentCustomer.stamps + ' / ' + MAX_STAMPS + ' SELLOS';
+      document.getElementById('client-uid-tag').innerText = 'UID: ' + currentCustomer.uid;
+      document.getElementById('client-progress-bar').style.width = ((currentCustomer.stamps / MAX_STAMPS) * 100) + '%';
 
-      document.getElementById('client-uid').innerText = 'UID: ' + activeCustomer.uid;
-      document.getElementById('client-display-name').innerText = activeCustomer.name;
-      document.getElementById('client-display-email').innerText = activeCustomer.email;
-      document.getElementById('client-counter').innerText = activeCustomer.stamps + ' / ' + MAX_STAMPS + ' SELLOS';
-      document.getElementById('client-progress').style.width = ((activeCustomer.stamps / MAX_STAMPS) * 100) + '%';
-
-      // Dibujar casillas de sellos
-      const grid = document.getElementById('client-grid');
+      // Dibujar casillas protegidas
+      const grid = document.getElementById('client-stamps-grid');
       grid.innerHTML = '';
-
       for (let i = 1; i <= MAX_STAMPS; i++) {
-        const isStamped = i <= activeCustomer.stamps;
-        const isPrize = i === MAX_STAMPS;
+        const isFilled = i <= currentCustomer.stamps;
+        const isReward = i === MAX_STAMPS;
         const box = document.createElement('div');
-
         box.className = `h-20 rounded-2xl flex flex-col items-center justify-center transition-all ${
-          isStamped ? 'stamp-filled' : isPrize ? 'stamp-empty border-white/30' : 'stamp-empty'
+          isFilled ? 'stamp-filled' : isReward ? 'stamp-empty border-white/30' : 'stamp-empty'
         }`;
 
-        if (isStamped) {
+        if (isFilled) {
           box.innerHTML = `
-            <svg class="w-6 h-6 text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.7)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-6 h-6 text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.8)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
             </svg>
             <span class="text-[8px] font-tech text-slate-300 uppercase tracking-widest mt-1">CONFIRMADO</span>
           `;
-        } else if (isPrize) {
+        } else if (isReward) {
           box.innerHTML = `
             <span class="text-sm font-tech font-bold text-slate-400">✦</span>
             <span class="text-[8px] font-tech text-slate-500 uppercase tracking-widest mt-1">PREMIO</span>
@@ -313,11 +345,11 @@
         grid.appendChild(box);
       }
 
-      // Renderizar Código QR
-      const qrContainer = document.getElementById('qrcode-box');
-      qrContainer.innerHTML = '';
-      new QRCode(qrContainer, {
-        text: activeCustomer.uid,
+      // Código QR único asociado al UID del cliente
+      const qrBox = document.getElementById('qrcode-target');
+      qrBox.innerHTML = '';
+      new QRCode(qrBox, {
+        text: currentCustomer.uid,
         width: 125,
         height: 125,
         colorDark: "#000000",
@@ -325,141 +357,173 @@
         correctLevel: QRCode.CorrectLevel.H
       });
 
-      const qrStatus = document.getElementById('qr-status-text');
-      if (activeCustomer.stamps >= MAX_STAMPS) {
-        qrStatus.innerHTML = '<span class="text-white font-extrabold">¡RECOMPENSA LISTA PARA CANJE!</span>';
+      const statusNote = document.getElementById('client-status-note');
+      if (currentCustomer.stamps >= MAX_STAMPS) {
+        statusNote.innerHTML = '<span class="text-white font-extrabold">¡RECOMPENSA DESBLOQUEADA! CANJEA EN CAJA</span>';
       } else {
-        qrStatus.innerText = 'PRESENTAR EN CAJA PARA RECIBIR SELLO';
+        statusNote.innerText = 'PRESENTAR ESTE QR EN CAJA';
       }
     }
 
-    // Terminal de Empleados
-    function openStaffAccess() {
-      const pin = prompt("Introduce el PIN de acceso del personal:");
+    function logoutCustomer() {
+      if (confirm("¿Deseas cerrar tu sesión en este dispositivo?")) {
+        localStorage.removeItem('aura_customer_profile');
+        currentCustomer = null;
+        showView('view-portal');
+      }
+    }
+
+    // Validación de NIP de Trabajador
+    function verifyStaffPIN() {
+      const pin = document.getElementById('staff-pin-input').value.trim();
       if (pin === STAFF_PIN) {
-        showView('view-staff');
-        startScanner();
-      } else if (pin !== null) {
-        alert("PIN incorrecto");
+        document.getElementById('staff-pin-input').value = '';
+        showView('view-staff-dashboard');
+        launchDirectCamera();
+      } else {
+        alert("NIP incorrecto. Intenta nuevamente.");
       }
     }
 
-    function exitStaffMode() {
-      if (html5QrScanner) {
-        html5QrScanner.clear();
+    // Inicializador directo de la cámara trasera
+    function launchDirectCamera() {
+      if (qrReaderInstance) {
+        qrReaderInstance.stop().catch(() => {}).then(() => startScannerStream());
+      } else {
+        startScannerStream();
       }
-      initApp();
     }
 
-    function startScanner() {
-      html5QrScanner = new Html5QrcodeScanner("reader", { 
-        fps: 10, 
-        qrbox: { width: 220, height: 220 } 
+    function startScannerStream() {
+      qrReaderInstance = new Html5Qrcode("scanner-video");
+      const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+
+      qrReaderInstance.start(
+        { facingMode: "environment" },
+        config,
+        (decodedText) => onBarcodeDetected(decodedText),
+        (errorMessage) => {}
+      ).catch(err => {
+        console.error("Error al acceder a la cámara:", err);
+        document.getElementById('scanner-video').innerText = "Permiso de cámara denegado o no disponible en este dispositivo.";
       });
-      html5QrScanner.render(onScanSuccess);
     }
 
-    let scannedClient = null;
+    function stopCameraAndExit() {
+      if (qrReaderInstance) {
+        qrReaderInstance.stop().then(() => {
+          qrReaderInstance.clear();
+          showView('view-portal');
+        }).catch(() => {
+          showView('view-portal');
+        });
+      } else {
+        showView('view-portal');
+      }
+    }
 
-    function onScanSuccess(decodedText) {
-      const stored = localStorage.getItem('aura_db_' + decodedText);
+    // Detección de QR de cliente por el escáner
+    function onBarcodeDetected(uid) {
+      const stored = localStorage.getItem('aura_user_' + uid);
       if (stored) {
-        scannedClient = JSON.parse(stored);
-        document.getElementById('staff-client-result').classList.remove('hidden');
-        document.getElementById('staff-name').innerText = scannedClient.name;
-        document.getElementById('staff-email').innerText = scannedClient.email;
-        document.getElementById('staff-stamps').innerText = scannedClient.stamps + ' / ' + MAX_STAMPS;
+        targetCustomer = JSON.parse(stored);
+        document.getElementById('staff-client-card').classList.remove('hidden');
+        document.getElementById('scanned-client-name').innerText = targetCustomer.name;
+        document.getElementById('scanned-client-email').innerText = targetCustomer.email;
+        document.getElementById('scanned-client-stamps').innerText = targetCustomer.stamps + ' / ' + MAX_STAMPS;
         if (navigator.vibrate) navigator.vibrate(60);
       } else {
-        alert("Código no reconocido en la base de clientes: " + decodedText);
+        alert("Código QR no reconocido: " + uid);
       }
     }
 
-    function staffAddStamp() {
-      if (!scannedClient) return;
-      if (scannedClient.stamps < MAX_STAMPS) {
-        scannedClient.stamps++;
-        localStorage.setItem('aura_db_' + scannedClient.uid, JSON.stringify(scannedClient));
+    function applyStampToScanned() {
+      if (!targetCustomer) return;
+      if (targetCustomer.stamps < MAX_STAMPS) {
+        targetCustomer.stamps++;
+        localStorage.setItem('aura_user_' + targetCustomer.uid, JSON.stringify(targetCustomer));
         
-        // Si el empleado está probando en el mismo navegador, actualiza la sesión
-        if (activeCustomer && activeCustomer.uid === scannedClient.uid) {
-          saveCustomer(scannedClient);
+        // Si el cliente está usando el mismo navegador de prueba, sincroniza su sesión
+        if (currentCustomer && currentCustomer.uid === targetCustomer.uid) {
+          localStorage.setItem('aura_customer_profile', JSON.stringify(targetCustomer));
         }
 
-        document.getElementById('staff-stamps').innerText = scannedClient.stamps + ' / ' + MAX_STAMPS;
-        alert("Sello aplicado correctamente a " + scannedClient.name);
+        document.getElementById('scanned-client-stamps').innerText = targetCustomer.stamps + ' / ' + MAX_STAMPS;
+        alert("Sello aplicado a " + targetCustomer.name);
       } else {
-        alert("La tarjeta ya completó todos sus sellos. Procede a canjear.");
+        alert("La tarjeta ya completó todos sus sellos.");
       }
     }
 
-    function staffRedeemReward() {
-      if (!scannedClient) return;
-      if (scannedClient.stamps >= MAX_STAMPS) {
-        scannedClient.stamps = 0;
-        localStorage.setItem('aura_db_' + scannedClient.uid, JSON.stringify(scannedClient));
+    function redeemRewardScanned() {
+      if (!targetCustomer) return;
+      if (targetCustomer.stamps >= MAX_STAMPS) {
+        targetCustomer.stamps = 0;
+        localStorage.setItem('aura_user_' + targetCustomer.uid, JSON.stringify(targetCustomer));
         
-        if (activeCustomer && activeCustomer.uid === scannedClient.uid) {
-          saveCustomer(scannedClient);
+        if (currentCustomer && currentCustomer.uid === targetCustomer.uid) {
+          localStorage.setItem('aura_customer_profile', JSON.stringify(targetCustomer));
         }
 
-        document.getElementById('staff-stamps').innerText = '0 / ' + MAX_STAMPS;
-        alert("Premio canjeado con éxito. Se reinició la tarjeta.");
+        document.getElementById('scanned-client-stamps').innerText = '0 / ' + MAX_STAMPS;
+        alert("Recompensa canjeada con éxito.");
       } else {
         alert("El cliente no tiene los sellos suficientes para canjear.");
       }
     }
 
-    // Emisión de Notificación Push
-    function sendBroadcastPush() {
+    // Disparador de Notificación
+    function dispatchPushNotification() {
       const title = document.getElementById('push-title').value.trim();
-      const body = document.getElementById('push-message').value.trim();
+      const desc = document.getElementById('push-desc').value.trim();
 
-      if (!title || !body) {
-        alert("Por favor completa el título y el mensaje");
+      if (!title || !desc) {
+        alert("Escribe un título y un mensaje");
         return;
       }
 
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification(title, {
-          body: body,
+          body: desc,
           icon: "/icon-192.png"
         });
         alert("Notificación enviada al dispositivo.");
-      } else {
-        alert("El navegador no tiene permisos de notificación activos todavía.");
+      } else if ("Notification" in window) {
+        Notification.requestPermission().then(perm => {
+          if (perm === "granted") {
+            new Notification(title, { body: desc, icon: "/icon-192.png" });
+          }
+        });
       }
     }
 
-    // Detección de Instalación PWA
-    let installEvent = null;
+    // Instalación PWA
+    let deferredPromptEvent;
     const btnInstall = document.getElementById('btn-install');
-    const iosBanner = document.getElementById('ios-guide');
-
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
-      installEvent = e;
+      deferredPromptEvent = e;
       btnInstall.classList.remove('hidden');
     });
 
     btnInstall.addEventListener('click', async () => {
-      if (installEvent) {
-        installEvent.prompt();
-        const res = await installEvent.userChoice;
+      if (deferredPromptEvent) {
+        deferredPromptEvent.prompt();
+        const res = await deferredPromptEvent.userChoice;
         if (res.outcome === 'accepted') btnInstall.classList.add('hidden');
-        installEvent = null;
+        deferredPromptEvent = null;
       }
     });
 
-    const isApple = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
-    const isStandalone = () => ('standalone' in window.navigator) && (window.navigator.standalone);
-
-    if (isApple() && !isStandalone()) {
-      iosBanner.classList.remove('hidden');
-    }
-
-    // Iniciar app al cargar
-    initApp();
+    // Auto-detección al entrar: si el cliente ya tiene sesión, entra directo a su tarjeta
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('aura_customer_profile');
+      if (saved) {
+        goToClientPortal();
+      } else {
+        showView('view-portal');
+      }
+    });
   </script>
 </body>
 </html>
