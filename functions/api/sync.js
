@@ -25,7 +25,7 @@ export async function onRequestGet(context) {
 export async function onRequestPost(context) {
   try {
     const body = await context.request.json();
-    const { uid, action, customerData } = body;
+    const { uid, action, customerData, notification } = body;
 
     if (!uid) {
       return new Response(JSON.stringify({ error: "UID requerido" }), { 
@@ -37,16 +37,24 @@ export async function onRequestPost(context) {
     let record = await context.env.AURA_KV.get(uid);
     let customer = record ? JSON.parse(record) : customerData;
 
+    if (!customer && action !== "REGISTER") {
+      return new Response(JSON.stringify({ error: "Cliente no existe" }), { status: 404 });
+    }
+
     if (action === "REGISTER") {
       customer = customerData;
     } else if (action === "ADD_STAMP") {
-      if (customer && customer.stamps < 6) {
+      if (customer.stamps < 6) {
         customer.stamps = (customer.stamps || 0) + 1;
       }
     } else if (action === "REDEEM") {
-      if (customer) {
-        customer.stamps = 0;
-      }
+      customer.stamps = 0;
+    } else if (action === "SEND_NOTIFICATION") {
+      customer.pendingNotification = {
+        title: notification.title,
+        body: notification.body,
+        id: Date.now()
+      };
     }
 
     await context.env.AURA_KV.put(uid, JSON.stringify(customer));
