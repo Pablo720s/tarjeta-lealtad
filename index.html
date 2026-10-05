@@ -11,9 +11,7 @@
   <meta name="apple-mobile-web-app-title" content="AURA Pass">
   
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Generador QR -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <!-- Lector QR -->
   <script src="https://unpkg.com/html5-qrcode"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -108,7 +106,7 @@
   <!-- TARJETA DEL CLIENTE -->
   <section id="view-client-card" class="hidden w-full max-w-sm flex flex-col items-center gap-5 my-auto">
     <header class="w-full flex justify-between px-1">
-      <span class="text-[10px] font-tech text-emerald-400 uppercase">● Sincronización Automática</span>
+      <span class="text-[10px] font-tech text-emerald-400 uppercase">● Sincronización Activa</span>
       <button onclick="logoutCustomer()" class="text-[10px] font-tech text-slate-500 uppercase">Salir</button>
     </header>
 
@@ -131,7 +129,7 @@
       <div id="client-stamps-grid" class="grid grid-cols-3 gap-3"></div>
 
       <div class="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col items-center">
-        <!-- Contenedor del QR Simplificado -->
+        <!-- Contenedor del QR Comprimido -->
         <div class="bg-white p-3 rounded-xl" id="qrcode-target"></div>
         <span class="text-[10px] font-tech text-slate-300 font-bold mt-3 uppercase text-center" id="client-status-note">Escanear QR en caja</span>
         <span class="text-[9px] font-mono text-slate-500 mt-1" id="client-uid-tag">UID: ---</span>
@@ -251,37 +249,36 @@
         </div>`;
       }
 
-      // 1. QR EXTREMADAMENTE SENCILLO: Solo contiene el UID, lo que hace que los cuadros sean grandes
+      // QR COMPRIMIDO: Solo un string corto (Ej: AU-123456|Angel|correo|0)
+      const qrPayload = `${currentCustomer.uid}|${currentCustomer.name}|${currentCustomer.email}|${currentCustomer.stamps}`;
+      
       const qrBox = document.getElementById('qrcode-target');
       qrBox.innerHTML = '';
       new QRCode(qrBox, {
-        text: currentCustomer.uid,
+        text: qrPayload,
         width: 160, 
         height: 160, 
         colorDark: "#000000", 
         colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.L // Nivel L: Menos puntos, escaneo ultrarrápido
+        correctLevel: QRCode.CorrectLevel.L // Nivel L: Super fácil de leer por la cámara
       });
     }
 
-    // 2. SINCRONIZACIÓN INVISIBLE Y AUTOMÁTICA
+    // SINCRONIZACIÓN INVISIBLE Y AUTOMÁTICA CADA 3 SEGUNDOS
     function startCloudSync() {
       if (syncIntervalId) clearInterval(syncIntervalId);
-      // Se ejecuta silenciosamente cada 3 segundos en segundo plano
       syncIntervalId = setInterval(async () => {
         if (!currentCustomer) return;
         try {
           const res = await fetch(`/api/sync?uid=${currentCustomer.uid}&nocache=${Date.now()}`);
           if (res.ok) {
             const data = await res.json();
-            // Si la nube tiene sellos diferentes al celular, actualiza la pantalla solo
             if (data.stamps !== undefined && data.stamps !== currentCustomer.stamps) {
               currentCustomer.stamps = data.stamps;
               localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
               if(navigator.vibrate) navigator.vibrate([100,50]);
               renderCustomerCard();
             }
-            // Si hay una notificación pendiente
             if (data.pendingNotification && data.pendingNotification.id !== lastNotifId) {
               lastNotifId = data.pendingNotification.id;
               fireNotification(data.pendingNotification.title, data.pendingNotification.body);
@@ -327,13 +324,22 @@
       else showView('view-portal');
     }
 
+    // AUTO-REPARACIÓN: LEE EL QR COMPRIMIDO AUNQUE LA NUBE FALLE
     async function processScannedQR(rawText) {
       let uid = rawText.trim();
-      
-      // Respaldo por si se escanea un QR viejo que era un JSON
-      try { let parsed = JSON.parse(uid); if (parsed.uid) uid = parsed.uid; } catch(e) {}
+      let fallbackCustomer = null;
 
-      // Busca al cliente en la nube
+      // Descomprime el formato: AU-123|Nombre|Email|Sellos
+      if (uid.includes('|')) {
+        const parts = uid.split('|');
+        uid = parts[0];
+        fallbackCustomer = { uid: parts[0], name: parts[1], email: parts[2], stamps: parseInt(parts[3]) || 0 };
+      } else {
+        // Respaldo por si escanean un QR viejo en formato JSON
+        try { let parsed = JSON.parse(uid); if (parsed.uid) { uid = parsed.uid; fallbackCustomer = parsed; } } catch(e) {}
+      }
+
+      // 1. Intenta conectarse a la nube
       try {
         const res = await fetch(`/api/sync?uid=${uid}&nocache=${Date.now()}`);
         if (res.ok) {
@@ -342,13 +348,23 @@
           throw new Error("No en la nube");
         }
       } catch(e) {
-        // Si no hay internet, busca en la memoria del trabajador
+        // 2. Si la nube falla, rescata los datos de la memoria del celular o directamente desde el QR
         const local = localStorage.getItem('aura_staff_db_' + uid);
-        if (local) targetCustomer = JSON.parse(local);
-        else { alert("Cliente no encontrado en la base de datos."); return; }
+        if (local) {
+          targetCustomer = JSON.parse(local);
+        } else if (fallbackCustomer) {
+          targetCustomer = fallbackCustomer;
+          // Repara el error subiéndolo a la nube en segundo plano
+          fetch('/api/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ uid: targetCustomer.uid, action: 'REGISTER', customerData: targetCustomer })
+          });
+        } else {
+          alert("Error: Código no reconocido."); return;
+        }
       }
 
-      // Muestra la ficha
       document.getElementById('staff-client-card').classList.remove('hidden');
       document.getElementById('scanned-client-name').innerText = targetCustomer.name;
       document.getElementById('scanned-client-uid').innerText = targetCustomer.uid;
@@ -356,7 +372,7 @@
       if(navigator.vibrate) navigator.vibrate(60);
     }
 
-    // 3. SOBRESCRITURA FORZADA A LA NUBE
+    // SOBRESCRITURA FORZADA
     async function applyStampWorker() {
       if (!targetCustomer) return;
       if (targetCustomer.stamps >= MAX_STAMPS) { alert("Tarjeta llena"); return; }
@@ -364,14 +380,11 @@
       const btn = document.getElementById('btn-add-stamp');
       btn.innerText = "Sellando..."; btn.disabled = true;
 
-      // Suma el sello en el trabajador
       targetCustomer.stamps += 1;
       document.getElementById('scanned-client-stamps').innerText = targetCustomer.stamps + ' / ' + MAX_STAMPS;
-      
-      // Guarda en la memoria del trabajador
       localStorage.setItem('aura_staff_db_' + targetCustomer.uid, JSON.stringify(targetCustomer));
 
-      // Sobrescribe obligatoriamente el perfil en la nube con este nuevo contador exacto
+      // Sobrescribe todo el perfil obligando a la nube a tomar este nuevo número de sellos
       fetch('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
