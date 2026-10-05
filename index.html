@@ -50,7 +50,7 @@
     <div class="text-center">
       <span class="text-[10px] font-tech tracking-[0.3em] text-slate-400 uppercase font-semibold">Sistema de Membresías</span>
       <h1 class="text-3xl font-extrabold text-white mt-1">AURA CLUB</h1>
-      <p class="text-xs text-slate-400 mt-1">Selecciona el tipo de acceso para continuar</p>
+      <p class="text-xs text-slate-400 mt-1">Selecciona tu tipo de acceso para continuar</p>
     </div>
 
     <div class="flex flex-col gap-3">
@@ -77,7 +77,7 @@
     <div class="text-center">
       <span class="text-[10px] font-tech tracking-[0.3em] text-slate-400 uppercase font-semibold">Pase Único</span>
       <h2 class="text-2xl font-bold text-white mt-1">Alta de Miembro</h2>
-      <p class="text-xs text-slate-400 mt-1">Tus datos quedarán guardados permanentemente en tu tarjeta</p>
+      <p class="text-xs text-slate-400 mt-1">Tus datos se guardarán permanentemente en la nube</p>
     </div>
 
     <form onsubmit="handleRegister(event)" class="titanium-card p-6 rounded-3xl flex flex-col gap-4">
@@ -91,7 +91,7 @@
         <input type="email" id="reg-email" required placeholder="tucorreo@ejemplo.com" 
                class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-white/40">
       </div>
-      <button type="submit" class="mt-2 w-full bg-white hover:bg-slate-200 text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl shadow-lg transition-all active:scale-95">
+      <button type="submit" id="btn-submit-reg" class="mt-2 w-full bg-white hover:bg-slate-200 text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl shadow-lg transition-all active:scale-95">
         Generar Mi Tarjeta
       </button>
     </form>
@@ -121,8 +121,8 @@
   <section id="view-client-card" class="hidden w-full max-w-sm flex flex-col items-center gap-5 my-auto">
     <header class="w-full flex items-center justify-between px-1">
       <div class="flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]"></span>
-        <span class="text-[10px] font-tech tracking-widest text-slate-400 uppercase font-semibold">Membresía Guardada</span>
+        <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse"></span>
+        <span class="text-[10px] font-tech tracking-widest text-slate-400 uppercase font-semibold">Conectado a la Nube</span>
       </div>
       <button onclick="logoutCustomer()" class="text-[10px] font-tech text-slate-500 hover:text-red-400 transition-colors uppercase">
         Cerrar Sesión
@@ -153,7 +153,7 @@
       <!-- Cuadrícula de sellos protegida -->
       <div id="client-stamps-grid" class="grid grid-cols-3 gap-3"></div>
 
-      <!-- Código QR portador de la credencial -->
+      <!-- Código QR portador del identificador -->
       <div class="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center">
         <div class="bg-white p-2.5 rounded-xl shadow-md" id="qrcode-target"></div>
         <span class="text-[10px] font-tech text-slate-300 tracking-wider font-bold mt-3 uppercase text-center" id="client-status-note">
@@ -168,7 +168,7 @@
     </button>
   </section>
 
-  <!-- TERMINAL DE TRABAJADOR CON LECTOR NATIVO -->
+  <!-- TERMINAL DE TRABAJADOR -->
   <section id="view-staff-dashboard" class="hidden w-full max-w-sm flex flex-col gap-4 my-auto">
     <header class="flex items-center justify-between px-1">
       <div>
@@ -188,56 +188,38 @@
       <p class="text-[10px] font-tech text-slate-400 uppercase tracking-wider text-center">Apunta al código QR del cliente</p>
     </div>
 
-    <!-- Ficha de cliente detectado -->
+    <!-- Ficha del cliente sincronizado desde la nube -->
     <div id="staff-client-card" class="hidden titanium-card p-5 rounded-3xl flex flex-col gap-4">
       <div>
-        <span class="text-[9px] font-tech text-slate-400 uppercase tracking-widest block">Cliente Identificado</span>
+        <span class="text-[9px] font-tech text-slate-400 uppercase tracking-widest block">Cliente Sincronizado</span>
         <h3 class="text-lg font-bold text-white" id="scanned-client-name">---</h3>
         <p class="text-xs text-slate-400 font-mono" id="scanned-client-email">---</p>
       </div>
 
       <div class="flex items-center justify-between bg-black/40 p-3 rounded-xl border border-white/5">
-        <span class="text-xs font-tech text-slate-300">Sellos Acumulados</span>
+        <span class="text-xs font-tech text-slate-300">Sellos en la Nube</span>
         <span class="text-lg font-bold text-white font-tech" id="scanned-client-stamps">0 / 6</span>
       </div>
 
       <div class="flex gap-2">
-        <button onclick="applyStampToScanned()" class="flex-1 bg-white hover:bg-slate-200 text-black font-tech font-bold text-xs uppercase py-3 rounded-xl transition-all active:scale-95 shadow">
+        <button id="btn-add-stamp" onclick="applyStampCloud()" class="flex-1 bg-white hover:bg-slate-200 text-black font-tech font-bold text-xs uppercase py-3 rounded-xl transition-all active:scale-95 shadow">
           + Poner Sello
         </button>
-        <button onclick="redeemRewardScanned()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-tech font-bold text-xs uppercase px-4 py-3 rounded-xl border border-white/10 transition-all active:scale-95">
+        <button onclick="redeemRewardCloud()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-tech font-bold text-xs uppercase px-4 py-3 rounded-xl border border-white/10 transition-all active:scale-95">
           Canjear
         </button>
       </div>
     </div>
-
-    <!-- Emisor de notificaciones directas -->
-    <div class="titanium-card p-4 rounded-3xl flex flex-col gap-3">
-      <span class="text-[10px] font-tech text-slate-400 uppercase tracking-widest font-semibold block">Avisos Push</span>
-      <input type="text" id="push-title" placeholder="Título de la alerta" 
-             class="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none">
-      <textarea id="push-desc" placeholder="Mensaje para los clientes del club..." rows="2" 
-                class="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none"></textarea>
-      <button onclick="dispatchPushNotification()" class="w-full bg-white/10 hover:bg-white/20 text-white font-tech text-xs uppercase py-2.5 rounded-xl border border-white/10 transition-all">
-        Disparar Notificación al Dispositivo
-      </button>
-    </div>
   </section>
 
-  <!-- Pie de navegación -->
+  <!-- Pie institucional -->
   <footer class="w-full max-w-sm pt-4 pb-2 text-center text-[10px] font-tech text-slate-600 border-t border-white/5">
     AURA LUXURY PASS // TECNOLOGÍA NFC & PWA
   </footer>
 
   <script>
-    let swRegistration = null;
-
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(reg => {
-          swRegistration = reg;
-        });
-      });
+      window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
     }
 
     const MAX_STAMPS = 6;
@@ -245,27 +227,37 @@
     let qrReaderInstance = null;
     let currentCustomer = null;
     let targetCustomer = null;
+    let syncIntervalId = null;
 
     function showView(viewId) {
       const views = ['view-portal', 'view-register', 'view-staff-auth', 'view-client-card', 'view-staff-dashboard'];
       views.forEach(id => document.getElementById(id).classList.add('hidden'));
       document.getElementById(viewId).classList.remove('hidden');
+
+      if (viewId !== 'view-client-card' && syncIntervalId) {
+        clearInterval(syncIntervalId);
+        syncIntervalId = null;
+      }
     }
 
     function goToClientPortal() {
       const saved = localStorage.getItem('aura_customer_profile');
       if (saved) {
         currentCustomer = JSON.parse(saved);
-        const record = localStorage.getItem('aura_user_' + currentCustomer.uid);
-        if (record) currentCustomer = JSON.parse(record);
         renderCustomerCard();
+        startCloudSync();
       } else {
         showView('view-register');
       }
     }
 
-    function handleRegister(e) {
+    // Registro del cliente conectado a Cloudflare KV
+    async function handleRegister(e) {
       e.preventDefault();
+      const btn = document.getElementById('btn-submit-reg');
+      btn.innerText = "Registrando en la nube...";
+      btn.disabled = true;
+
       const name = document.getElementById('reg-name').value.trim();
       const email = document.getElementById('reg-email').value.trim();
       const uid = 'AU-' + Math.floor(100000 + Math.random() * 900000);
@@ -277,16 +269,29 @@
         stamps: 0
       };
 
-      localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
-      localStorage.setItem('aura_user_' + uid, JSON.stringify(currentCustomer));
+      try {
+        await fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            uid: uid,
+            action: 'REGISTER',
+            customerData: currentCustomer
+          })
+        });
 
-      if ("Notification" in window && Notification.permission !== "granted") {
-        Notification.requestPermission();
+        localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
+        renderCustomerCard();
+        startCloudSync();
+      } catch (err) {
+        alert("Error al conectar con la base de datos: " + err.message);
+      } finally {
+        btn.innerText = "Generar Mi Tarjeta";
+        btn.disabled = false;
       }
-
-      renderCustomerCard();
     }
 
+    // Dibujar tarjeta del cliente
     function renderCustomerCard() {
       showView('view-client-card');
 
@@ -303,7 +308,7 @@
         const isReward = i === MAX_STAMPS;
         const box = document.createElement('div');
         box.className = `h-20 rounded-2xl flex flex-col items-center justify-center transition-all ${
-          isFilled ? 'stamp-filled' : isReward ? 'stamp-empty border-white/30' : 'stamp-empty'
+          isFilled ? 'stamp-filled scale-[1.02]' : isReward ? 'stamp-empty border-white/30' : 'stamp-empty'
         }`;
 
         if (isFilled) {
@@ -324,18 +329,10 @@
         grid.appendChild(box);
       }
 
-      // El código QR ahora viaja con el paquete completo de datos del cliente
-      const qrPayload = JSON.stringify({
-        uid: currentCustomer.uid,
-        name: currentCustomer.name,
-        email: currentCustomer.email,
-        stamps: currentCustomer.stamps
-      });
-
       const qrBox = document.getElementById('qrcode-target');
       qrBox.innerHTML = '';
       new QRCode(qrBox, {
-        text: qrPayload,
+        text: currentCustomer.uid,
         width: 130,
         height: 130,
         colorDark: "#000000",
@@ -345,10 +342,31 @@
 
       const statusNote = document.getElementById('client-status-note');
       if (currentCustomer.stamps >= MAX_STAMPS) {
-        statusNote.innerHTML = '<span class="text-white font-extrabold">¡RECOMPENSA DESBLOQUEADA! CANJEA EN CAJA</span>';
+        statusNote.innerHTML = '<span class="text-emerald-400 font-extrabold">¡RECOMPENSA DISPONIBLE! CANJEA EN CAJA</span>';
       } else {
         statusNote.innerText = 'PRESENTAR ESTE QR EN CAJA';
       }
+    }
+
+    // Sondeo en segundo plano: consulta a la nube cada 2.5 segundos
+    function startCloudSync() {
+      if (syncIntervalId) clearInterval(syncIntervalId);
+
+      syncIntervalId = setInterval(async () => {
+        if (!currentCustomer || !currentCustomer.uid) return;
+        try {
+          const res = await fetch('/api/sync?uid=' + currentCustomer.uid);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.stamps !== currentCustomer.stamps) {
+              currentCustomer.stamps = data.stamps;
+              localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
+              if (navigator.vibrate) navigator.vibrate(80);
+              renderCustomerCard();
+            }
+          }
+        } catch (e) {}
+      }, 2500);
     }
 
     function logoutCustomer() {
@@ -388,8 +406,7 @@
         (decodedText) => onBarcodeDetected(decodedText),
         (errorMessage) => {}
       ).catch(err => {
-        console.error("Error al acceder a la cámara:", err);
-        document.getElementById('scanner-video').innerText = "Permiso de cámara denegado o no disponible.";
+        document.getElementById('scanner-video').innerText = "Permiso de cámara no concedido.";
       });
     }
 
@@ -406,132 +423,84 @@
       }
     }
 
-    // Lector universal: procesa códigos directos, paquetes JSON o URLs
-    function onBarcodeDetected(rawData) {
-      let parsed = null;
+    // Detección del QR y consulta en la base de datos de Cloudflare
+    async function onBarcodeDetected(rawUid) {
+      const cleanUid = rawUid.trim();
 
       try {
-        parsed = JSON.parse(rawData);
-      } catch (e) {
-        // Si no es JSON plano, buscar si está guardado en este dispositivo
-        const stored = localStorage.getItem('aura_user_' + rawData);
-        if (stored) parsed = JSON.parse(stored);
-      }
-
-      if (parsed && parsed.uid) {
-        // Sincronizar o rescatar el conteo real almacenado en el lector
-        const localRecord = localStorage.getItem('aura_user_' + parsed.uid);
-        if (localRecord) {
-          targetCustomer = JSON.parse(localRecord);
+        const res = await fetch('/api/sync?uid=' + cleanUid);
+        if (res.ok) {
+          targetCustomer = await res.json();
+          document.getElementById('staff-client-card').classList.remove('hidden');
+          document.getElementById('scanned-client-name').innerText = targetCustomer.name;
+          document.getElementById('scanned-client-email').innerText = targetCustomer.email;
+          document.getElementById('scanned-client-stamps').innerText = targetCustomer.stamps + ' / ' + MAX_STAMPS;
+          if (navigator.vibrate) navigator.vibrate(60);
         } else {
-          targetCustomer = parsed;
-          localStorage.setItem('aura_user_' + targetCustomer.uid, JSON.stringify(targetCustomer));
+          alert("Cliente no registrado en la base de datos: " + cleanUid);
         }
-
-        document.getElementById('staff-client-card').classList.remove('hidden');
-        document.getElementById('scanned-client-name').innerText = targetCustomer.name;
-        document.getElementById('scanned-client-email').innerText = targetCustomer.email;
-        document.getElementById('scanned-client-stamps').innerText = targetCustomer.stamps + ' / ' + MAX_STAMPS;
-        if (navigator.vibrate) navigator.vibrate(60);
-      } else {
-        alert("Código no reconocido. Asegúrate de escanear el QR oficial de AURA.");
+      } catch (err) {
+        alert("Error de conexión al buscar cliente: " + err.message);
       }
     }
 
-    function applyStampToScanned() {
+    // Sellar cliente directamente en la nube
+    async function applyStampCloud() {
+      if (!targetCustomer) return;
+      const btn = document.getElementById('btn-add-stamp');
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            uid: targetCustomer.uid,
+            action: 'ADD_STAMP'
+          })
+        });
+
+        if (res.ok) {
+          targetCustomer = await res.json();
+          document.getElementById('scanned-client-stamps').innerText = targetCustomer.stamps + ' / ' + MAX_STAMPS;
+          alert("Sello aplicado a " + targetCustomer.name + " en la nube.");
+        }
+      } catch (err) {
+        alert("Error al aplicar sello: " + err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // Canjear recompensa en la nube
+    async function redeemRewardCloud() {
       if (!targetCustomer) return;
       if (targetCustomer.stamps < MAX_STAMPS) {
-        targetCustomer.stamps++;
-        localStorage.setItem('aura_user_' + targetCustomer.uid, JSON.stringify(targetCustomer));
-        
-        if (currentCustomer && currentCustomer.uid === targetCustomer.uid) {
-          localStorage.setItem('aura_customer_profile', JSON.stringify(targetCustomer));
-        }
-
-        document.getElementById('scanned-client-stamps').innerText = targetCustomer.stamps + ' / ' + MAX_STAMPS;
-        alert("Sello aplicado a " + targetCustomer.name);
-      } else {
-        alert("La tarjeta ya completó todos sus sellos.");
-      }
-    }
-
-    function redeemRewardScanned() {
-      if (!targetCustomer) return;
-      if (targetCustomer.stamps >= MAX_STAMPS) {
-        targetCustomer.stamps = 0;
-        localStorage.setItem('aura_user_' + targetCustomer.uid, JSON.stringify(targetCustomer));
-        
-        if (currentCustomer && currentCustomer.uid === targetCustomer.uid) {
-          localStorage.setItem('aura_customer_profile', JSON.stringify(targetCustomer));
-        }
-
-        document.getElementById('scanned-client-stamps').innerText = '0 / ' + MAX_STAMPS;
-        alert("Recompensa canjeada con éxito.");
-      } else {
-        alert("El cliente no tiene los sellos suficientes para canjear.");
-      }
-    }
-
-    // Disparador de notificación nativa por Service Worker
-    async function dispatchPushNotification() {
-      const title = document.getElementById('push-title').value.trim();
-      const desc = document.getElementById('push-desc').value.trim();
-
-      if (!title || !desc) {
-        alert("Escribe un título y un mensaje");
+        alert("El cliente no tiene los sellos necesarios.");
         return;
       }
 
-      if (!("Notification" in window)) {
-        alert("Este dispositivo o navegador no soporta notificaciones.");
-        return;
-      }
+      try {
+        const res = await fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            uid: targetCustomer.uid,
+            action: 'REDEEM'
+          })
+        });
 
-      let permission = Notification.permission;
-      if (permission !== "granted") {
-        permission = await Notification.requestPermission();
-      }
-
-      if (permission === "granted") {
-        try {
-          const reg = await navigator.serviceWorker.ready;
-          await reg.showNotification(title, {
-            body: desc,
-            icon: '/icon-192.png',
-            badge: '/icon-192.png',
-            vibrate: [200, 100, 200]
-          });
-          alert("Notificación enviada a la bandeja del teléfono.");
-        } catch (err) {
-          navigator.serviceWorker.controller.postMessage({
-            type: 'SHOW_NOTIFICATION',
-            title: title,
-            body: desc
-          });
-          alert("Notificación disparada mediante Service Worker.");
+        if (res.ok) {
+          targetCustomer = await res.json();
+          document.getElementById('scanned-client-stamps').innerText = '0 / ' + MAX_STAMPS;
+          alert("Recompensa canjeada. Tarjeta reiniciada con éxito.");
         }
-      } else {
-        alert("Permiso de notificaciones bloqueado en los ajustes del navegador.");
+      } catch (err) {
+        alert("Error al canjear: " + err.message);
       }
     }
 
-    let deferredPromptEvent;
-    const btnInstall = document.getElementById('btn-install');
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPromptEvent = e;
-      btnInstall.classList.remove('hidden');
-    });
-
-    btnInstall.addEventListener('click', async () => {
-      if (deferredPromptEvent) {
-        deferredPromptEvent.prompt();
-        const res = await deferredPromptEvent.userChoice;
-        if (res.outcome === 'accepted') btnInstall.classList.add('hidden');
-        deferredPromptEvent = null;
-      }
-    });
-
+    // Comprobación inicial de perfil
     window.addEventListener('DOMContentLoaded', () => {
       const saved = localStorage.getItem('aura_customer_profile');
       if (saved) {
