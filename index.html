@@ -8,17 +8,14 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="AURA Pass">
-  <link rel="apple-touch-icon" href="/icon-192.png">
-
-  <!-- Frameworks y Librerías -->
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
 
-  <!-- Tipografía -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -26,329 +23,223 @@
     .titanium-card {
       background: radial-gradient(140% 120% at 50% 0%, #151821 0%, #090a0d 100%);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 1px 1px 0 rgba(255, 255, 255, 0.15);
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8), inset 0 1px 1px 0 rgba(255,255,255,0.15);
     }
     .stamp-filled {
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
-      border: 1px solid rgba(255, 255, 255, 0.45);
-      box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+      background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 100%);
+      border: 1px solid rgba(255,255,255,0.45);
+      box-shadow: 0 0 15px rgba(255,255,255,0.1);
     }
     .stamp-empty {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px dashed rgba(255, 255, 255, 0.12);
+      background: rgba(255,255,255,0.02);
+      border: 1px dashed rgba(255,255,255,0.12);
     }
-    #scanner-video video {
-      object-fit: cover !important;
-      border-radius: 1.25rem;
+    #scanner-video video { border-radius: 1.25rem; object-fit: cover; }
+    
+    /* Alerta In-App para notificaciones */
+    #in-app-notification {
+      transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
   </style>
 </head>
-<body class="bg-[#050608] text-slate-100 min-h-screen flex flex-col items-center justify-between p-4 selection:bg-white selection:text-black">
+<body class="bg-[#050608] text-slate-100 min-h-screen flex flex-col items-center justify-between p-4">
 
-  <!-- PORTAL DE ACCESO (CLIENTE / TRABAJADOR) -->
+  <!-- ALERTA IN-APP (SE MUESTRA SI LA NOTIFICACIÓN DEL SISTEMA FALLA) -->
+  <div id="in-app-notification" class="fixed top-[-100%] left-0 w-full px-4 z-50 pt-4 flex justify-center">
+    <div class="bg-cyan-500 text-white w-full max-w-sm rounded-2xl p-4 shadow-[0_10px_40px_rgba(6,182,212,0.5)] border border-cyan-400 flex flex-col gap-1 cursor-pointer" onclick="closeInAppNotification()">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">🔔</span>
+        <span class="text-[10px] font-tech uppercase tracking-widest font-bold text-cyan-100">Mensaje del Negocio</span>
+      </div>
+      <h3 id="in-app-title" class="font-bold text-lg leading-tight mt-1">Título</h3>
+      <p id="in-app-body" class="text-sm opacity-90 leading-tight">Cuerpo del mensaje</p>
+      <p class="text-[9px] text-cyan-200 mt-2 text-center uppercase tracking-wider">Toca para cerrar</p>
+    </div>
+  </div>
+
+  <!-- PORTAL DE INICIO -->
   <section id="view-portal" class="w-full max-w-sm my-auto flex flex-col gap-6">
     <div class="text-center">
       <span class="text-[10px] font-tech tracking-[0.3em] text-slate-400 uppercase font-semibold">Sistema de Membresías</span>
       <h1 class="text-3xl font-extrabold text-white mt-1">AURA CLUB</h1>
-      <p class="text-xs text-slate-400 mt-1">Selecciona tu tipo de acceso para continuar</p>
     </div>
 
     <div class="flex flex-col gap-3">
-      <button onclick="goToClientPortal()" class="titanium-card p-5 rounded-2xl flex items-center justify-between text-left hover:border-white/30 transition-all active:scale-[0.98]">
+      <button onclick="goToClientPortal()" class="titanium-card p-5 rounded-2xl flex items-center justify-between text-left active:scale-[0.98]">
         <div>
           <span class="text-base font-bold text-white block">Soy Cliente</span>
-          <span class="text-xs text-slate-400">Ver mis sellos acumulados y mi código QR</span>
+          <span class="text-xs text-slate-400">Ver mis sellos y código QR</span>
         </div>
         <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white">→</div>
       </button>
 
-      <button onclick="showView('view-staff-auth')" class="titanium-card p-5 rounded-2xl flex items-center justify-between text-left hover:border-white/30 transition-all active:scale-[0.98]">
+      <button onclick="showView('view-staff-auth')" class="titanium-card p-5 rounded-2xl flex items-center justify-between text-left active:scale-[0.98]">
         <div>
           <span class="text-base font-bold text-white block">Soy Trabajador</span>
-          <span class="text-xs text-slate-400">Escanear clientes, sellar visitas y avisos</span>
+          <span class="text-xs text-slate-400">Escanear y enviar avisos</span>
         </div>
         <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400">🔒</div>
       </button>
     </div>
   </section>
 
-  <!-- FORMULARIO DE REGISTRO PARA CLIENTES -->
+  <!-- REGISTRO CLIENTE -->
   <section id="view-register" class="hidden w-full max-w-sm my-auto flex flex-col gap-5">
     <div class="text-center">
-      <span class="text-[10px] font-tech tracking-[0.3em] text-slate-400 uppercase font-semibold">Pase Único</span>
-      <h2 class="text-2xl font-bold text-white mt-1">Alta de Miembro</h2>
-      <p class="text-xs text-slate-400 mt-1">Tus datos se guardarán permanentemente en la nube</p>
+      <h2 class="text-2xl font-bold text-white">Alta de Miembro</h2>
     </div>
-
     <form onsubmit="handleRegister(event)" class="titanium-card p-6 rounded-3xl flex flex-col gap-4">
-      <div>
-        <label class="text-[11px] font-tech text-slate-300 uppercase tracking-wider block mb-1">Nombre Completo</label>
-        <input type="text" id="reg-name" required placeholder="Tu nombre" 
-               class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-white/40">
-      </div>
-      <div>
-        <label class="text-[11px] font-tech text-slate-300 uppercase tracking-wider block mb-1">Correo Electrónico</label>
-        <input type="email" id="reg-email" required placeholder="tucorreo@ejemplo.com" 
-               class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-white/40">
-      </div>
-      <button type="submit" id="btn-submit-reg" class="mt-2 w-full bg-white hover:bg-slate-200 text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl shadow-lg transition-all active:scale-95">
-        Generar Mi Tarjeta
-      </button>
+      <input type="text" id="reg-name" required placeholder="Nombre Completo" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white/40">
+      <input type="email" id="reg-email" required placeholder="Correo Electrónico" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white/40">
+      <button type="submit" id="btn-submit-reg" class="w-full bg-white text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl shadow-lg active:scale-95">Generar Tarjeta</button>
     </form>
-    <button onclick="showView('view-portal')" class="text-xs text-slate-500 hover:text-white text-center">Volver al inicio</button>
+    <button onclick="showView('view-portal')" class="text-xs text-slate-500">Volver</button>
   </section>
 
-  <!-- AUTENTICACIÓN CON NIP DE TRABAJADOR -->
+  <!-- ACCESO TRABAJADOR -->
   <section id="view-staff-auth" class="hidden w-full max-w-sm my-auto flex flex-col gap-5">
     <div class="text-center">
-      <span class="text-[10px] font-tech tracking-[0.3em] text-slate-400 uppercase font-semibold">Acceso Restringido</span>
-      <h2 class="text-2xl font-bold text-white mt-1">Terminal de Personal</h2>
-      <p class="text-xs text-slate-400 mt-1">Ingresa el NIP de 6 dígitos del negocio</p>
+      <h2 class="text-2xl font-bold text-white">Terminal Personal</h2>
     </div>
-
     <div class="titanium-card p-6 rounded-3xl flex flex-col gap-4">
-      <input type="password" id="staff-pin-input" maxlength="6" inputmode="numeric" placeholder="••••••" 
-             class="w-full bg-black/60 border border-white/20 rounded-xl py-3 text-center text-2xl tracking-[0.5em] text-white focus:outline-none focus:border-white/50">
-      <button onclick="verifyStaffPIN()" class="w-full bg-white hover:bg-slate-200 text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl shadow transition-all active:scale-95">
-        Ingresar a Terminal
-      </button>
-      <p class="text-[10px] text-center text-slate-500 font-tech">PIN por defecto: 123456</p>
+      <input type="password" id="staff-pin-input" maxlength="6" inputmode="numeric" placeholder="••••••" class="w-full bg-black/60 border border-white/20 rounded-xl py-3 text-center text-2xl tracking-[0.5em] text-white focus:outline-none">
+      <button onclick="verifyStaffPIN()" class="w-full bg-white text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl shadow active:scale-95">Ingresar</button>
+      <p class="text-[10px] text-center text-slate-500 font-tech">PIN: 123456</p>
     </div>
-    <button onclick="showView('view-portal')" class="text-xs text-slate-500 hover:text-white text-center">Volver al inicio</button>
+    <button onclick="showView('view-portal')" class="text-xs text-slate-500">Volver</button>
   </section>
 
-  <!-- TARJETA EXCLUSIVA DEL CLIENTE -->
+  <!-- TARJETA CLIENTE -->
   <section id="view-client-card" class="hidden w-full max-w-sm flex flex-col items-center gap-5 my-auto">
-    <header class="w-full flex items-center justify-between px-1">
-      <div class="flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse"></span>
-        <span class="text-[10px] font-tech tracking-widest text-slate-400 uppercase font-semibold">Conectado a la Nube</span>
-      </div>
-      <button onclick="logoutCustomer()" class="text-[10px] font-tech text-slate-500 hover:text-red-400 transition-colors uppercase">
-        Cerrar Sesión
-      </button>
+    <header class="w-full flex justify-between px-1">
+      <span class="text-[10px] font-tech text-emerald-400 uppercase">● Sincronizado</span>
+      <button onclick="logoutCustomer()" class="text-[10px] font-tech text-slate-500 uppercase">Salir</button>
     </header>
 
-    <main class="w-full titanium-card rounded-[2.2rem] p-6 relative flex flex-col gap-5">
-      <div class="flex items-start justify-between">
-        <div>
-          <span class="text-[9px] font-tech tracking-[0.25em] text-slate-400 uppercase font-bold block">Pase Personal</span>
-          <h2 class="text-xl font-extrabold text-white mt-0.5 tracking-tight" id="client-name-display">Nombre</h2>
-          <p class="text-[11px] text-slate-400 font-mono" id="client-email-display">correo@ejemplo.com</p>
-        </div>
-        <div class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center font-bold text-xs text-white">✦</div>
+    <main class="w-full titanium-card rounded-[2.2rem] p-6 flex flex-col gap-5">
+      <div>
+        <h2 class="text-xl font-extrabold text-white" id="client-name-display">Nombre</h2>
+        <p class="text-[11px] text-slate-400 font-mono" id="client-email-display">correo</p>
       </div>
 
-      <!-- Barra de progreso -->
       <div>
-        <div class="flex justify-between items-center text-[10px] font-tech mb-2">
-          <span class="text-slate-400 uppercase tracking-wider">Progreso</span>
+        <div class="flex justify-between text-[10px] font-tech mb-2">
+          <span class="text-slate-400">PROGRESO</span>
           <span class="text-white font-bold" id="client-stamp-counter">0 / 6 SELLOS</span>
         </div>
-        <div class="w-full bg-white/5 rounded-full h-1.5 overflow-hidden p-[1px] border border-white/10">
-          <div id="client-progress-bar" class="bg-gradient-to-r from-slate-400 via-slate-100 to-white h-full rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+        <div class="w-full bg-white/5 rounded-full h-1.5 p-[1px] border border-white/10">
+          <div id="client-progress-bar" class="bg-white h-full rounded-full transition-all duration-500" style="width: 0%"></div>
         </div>
       </div>
 
-      <!-- Cuadrícula de sellos protegida -->
       <div id="client-stamps-grid" class="grid grid-cols-3 gap-3"></div>
 
-      <!-- Código QR portador del identificador -->
-      <div class="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center">
-        <div class="bg-white p-2.5 rounded-xl shadow-md" id="qrcode-target"></div>
-        <span class="text-[10px] font-tech text-slate-300 tracking-wider font-bold mt-3 uppercase text-center" id="client-status-note">
-          Presentar este QR en caja
-        </span>
-        <span class="text-[9px] font-mono text-slate-500 mt-0.5" id="client-uid-tag">UID: ----</span>
+      <div class="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col items-center">
+        <div class="bg-white p-2 rounded-xl" id="qrcode-target"></div>
+        <span class="text-[10px] font-tech text-slate-300 font-bold mt-3 uppercase text-center" id="client-status-note">Escanear QR en caja</span>
       </div>
     </main>
-
-    <button id="btn-install" class="hidden w-full bg-white hover:bg-slate-200 text-black font-tech font-bold text-xs uppercase py-3.5 rounded-2xl shadow-xl transition-all active:scale-95">
-      Guardar Tarjeta en el Celular
-    </button>
   </section>
 
-  <!-- TERMINAL DE TRABAJADOR -->
+  <!-- TERMINAL TRABAJADOR -->
   <section id="view-staff-dashboard" class="hidden w-full max-w-sm flex flex-col gap-4 my-auto">
-    <header class="flex items-center justify-between px-1">
-      <div>
-        <span class="text-[10px] font-tech tracking-widest text-slate-400 uppercase font-semibold block">Terminal Activa</span>
-        <h2 class="text-xl font-bold text-white">Lector de Mostrador</h2>
-      </div>
-      <button onclick="stopCameraAndExit()" class="text-xs font-tech text-slate-400 hover:text-white px-3 py-1.5 border border-white/10 rounded-xl">
-        Cerrar Turno
-      </button>
+    <header class="flex justify-between px-1">
+      <span class="text-[10px] font-tech text-slate-400 uppercase font-semibold">Lector QR</span>
+      <button onclick="stopCameraAndExit()" class="text-xs font-tech text-slate-400">Cerrar</button>
     </header>
 
-    <!-- Visor de cámara trasera -->
     <div class="titanium-card p-4 rounded-3xl flex flex-col items-center gap-3">
-      <div id="scanner-video" class="w-full aspect-square bg-black rounded-2xl overflow-hidden border border-white/10 flex items-center justify-center text-xs text-slate-500">
+      <div id="scanner-video" class="w-full aspect-square bg-black rounded-2xl overflow-hidden flex items-center justify-center text-xs text-slate-500">
         Iniciando cámara...
       </div>
-      <p class="text-[10px] font-tech text-slate-400 uppercase tracking-wider text-center">Apunta al código QR del cliente</p>
     </div>
 
-    <!-- Buscador manual de respaldo -->
-    <div class="titanium-card p-3 rounded-2xl flex gap-2">
-      <input type="text" id="manual-uid-input" placeholder="O escribe el UID (Ej. AU-123456)" 
-             class="flex-1 bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none uppercase font-mono">
-      <button onclick="searchManualUid()" class="bg-white/10 hover:bg-white/20 text-white font-tech text-xs px-3 py-2 rounded-xl border border-white/10 transition-all">
-        Buscar
-      </button>
-    </div>
-
-    <!-- Ficha del cliente sincronizado desde la nube -->
+    <!-- Ficha Cliente Escaneado -->
     <div id="staff-client-card" class="hidden titanium-card p-5 rounded-3xl flex flex-col gap-4">
       <div>
-        <span class="text-[9px] font-tech text-slate-400 uppercase tracking-widest block">Cliente Sincronizado</span>
+        <span class="text-[9px] font-tech text-emerald-400 uppercase block">Cliente Reconocido</span>
         <h3 class="text-lg font-bold text-white" id="scanned-client-name">---</h3>
-        <p class="text-xs text-slate-400 font-mono" id="scanned-client-email">---</p>
+        <p class="text-[10px] text-slate-400 font-mono">UID: <span id="scanned-client-uid">---</span></p>
       </div>
 
-      <div class="flex items-center justify-between bg-black/40 p-3 rounded-xl border border-white/5">
-        <span class="text-xs font-tech text-slate-300">Sellos en la Nube</span>
+      <div class="flex justify-between bg-black/40 p-3 rounded-xl border border-white/5">
+        <span class="text-xs font-tech text-slate-300">Sellos</span>
         <span class="text-lg font-bold text-white font-tech" id="scanned-client-stamps">0 / 6</span>
       </div>
 
       <div class="flex gap-2">
-        <button id="btn-add-stamp" onclick="applyStampCloud()" class="flex-1 bg-white hover:bg-slate-200 text-black font-tech font-bold text-xs uppercase py-3 rounded-xl transition-all active:scale-95 shadow">
-          + Poner Sello
-        </button>
-        <button onclick="redeemRewardCloud()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-tech font-bold text-xs uppercase px-4 py-3 rounded-xl border border-white/10 transition-all active:scale-95">
-          Canjear
-        </button>
+        <button onclick="applyStampCloud()" id="btn-add-stamp" class="flex-1 bg-white text-black font-tech font-bold text-xs uppercase py-3 rounded-xl active:scale-95">+ Sellar</button>
+        <button onclick="redeemRewardCloud()" class="bg-slate-800 text-slate-200 font-tech font-bold text-xs uppercase px-4 py-3 rounded-xl border border-white/10 active:scale-95">Canjear</button>
       </div>
 
-      <!-- Envío de Notificación Directa al Cliente -->
       <div class="border-t border-white/10 pt-3 flex flex-col gap-2">
-        <span class="text-[9px] font-tech text-slate-400 uppercase tracking-wider block">Notificación a este cliente</span>
-        <input type="text" id="target-push-title" placeholder="Título (Ej. ¡Sello agregado!)" 
-               class="w-full bg-black/50 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none">
-        <input type="text" id="target-push-body" placeholder="Mensaje para el teléfono del cliente" 
-               class="w-full bg-black/50 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none">
-        <button onclick="sendPushToClient()" class="w-full bg-white/10 hover:bg-white/20 text-white font-tech text-xs uppercase py-2 rounded-lg border border-white/10 transition-all">
-          Enviar Notificación al Celular del Cliente
-        </button>
+        <span class="text-[9px] font-tech text-slate-400 uppercase">Enviar Aviso a este cliente</span>
+        <input type="text" id="target-push-title" placeholder="Título" class="w-full bg-black/50 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none">
+        <input type="text" id="target-push-body" placeholder="Mensaje" class="w-full bg-black/50 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none">
+        <button onclick="sendPushToClient()" class="w-full bg-white/10 text-white font-tech text-xs uppercase py-2 rounded-lg border border-white/10 active:scale-95">Enviar Notificación</button>
       </div>
     </div>
   </section>
 
-  <!-- Pie institucional -->
-  <footer class="w-full max-w-sm pt-4 pb-2 text-center text-[10px] font-tech text-slate-600 border-t border-white/5">
-    AURA LUXURY PASS // TECNOLOGÍA NFC & PWA
-  </footer>
-
   <script>
-    let swRegistration = null;
-
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(reg => {
-          swRegistration = reg;
-        });
-      });
-    }
-
     const MAX_STAMPS = 6;
     const STAFF_PIN = "123456";
     let qrReaderInstance = null;
     let currentCustomer = null;
     let targetCustomer = null;
     let syncIntervalId = null;
-    let lastHandledNotificationId = 0;
+    let lastNotifId = 0;
 
     function showView(viewId) {
-      const views = ['view-portal', 'view-register', 'view-staff-auth', 'view-client-card', 'view-staff-dashboard'];
-      views.forEach(id => document.getElementById(id).classList.add('hidden'));
+      ['view-portal', 'view-register', 'view-staff-auth', 'view-client-card', 'view-staff-dashboard'].forEach(id => document.getElementById(id).classList.add('hidden'));
       document.getElementById(viewId).classList.remove('hidden');
-
-      if (viewId !== 'view-client-card' && syncIntervalId) {
-        clearInterval(syncIntervalId);
-        syncIntervalId = null;
-      }
+      if (viewId !== 'view-client-card' && syncIntervalId) clearInterval(syncIntervalId);
     }
 
+    // CLIENTE: Registro e Inicio
     async function goToClientPortal() {
       const saved = localStorage.getItem('aura_customer_profile');
       if (saved) {
         currentCustomer = JSON.parse(saved);
         renderCustomerCard();
-        await verifyOrRegisterInCloud();
         startCloudSync();
+        if ("Notification" in window) Notification.requestPermission();
       } else {
         showView('view-register');
       }
     }
 
-    async function verifyOrRegisterInCloud() {
-      if (!currentCustomer || !currentCustomer.uid) return;
-      try {
-        const check = await fetch('/api/sync?uid=' + currentCustomer.uid);
-        if (!check.ok) {
-          await fetch('/api/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              uid: currentCustomer.uid,
-              action: 'REGISTER',
-              customerData: currentCustomer
-            })
-          });
-        }
-      } catch (e) {}
-    }
-
     async function handleRegister(e) {
       e.preventDefault();
-      const btn = document.getElementById('btn-submit-reg');
-      btn.innerText = "Registrando en la nube...";
-      btn.disabled = true;
-
-      const name = document.getElementById('reg-name').value.trim();
-      const email = document.getElementById('reg-email').value.trim();
-      const uid = 'AU-' + Math.floor(100000 + Math.random() * 900000);
-
+      document.getElementById('btn-submit-reg').innerText = "Generando...";
       currentCustomer = {
-        uid: uid,
-        name: name,
-        email: email,
+        uid: 'AU-' + Math.floor(100000 + Math.random() * 900000),
+        name: document.getElementById('reg-name').value.trim(),
+        email: document.getElementById('reg-email').value.trim(),
         stamps: 0
       };
-
+      
+      // Intento subir a la nube
       try {
         await fetch('/api/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            uid: uid,
-            action: 'REGISTER',
-            customerData: currentCustomer
-          })
+          body: JSON.stringify({ uid: currentCustomer.uid, action: 'REGISTER', customerData: currentCustomer })
         });
+      } catch(e) { console.log("Se guardará solo en QR temporalmente"); }
 
-        localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
-
-        if ("Notification" in window && Notification.permission !== "granted") {
-          Notification.requestPermission();
-        }
-
-        renderCustomerCard();
-        startCloudSync();
-      } catch (err) {
-        alert("Error de conexión: " + err.message);
-      } finally {
-        btn.innerText = "Generar Mi Tarjeta";
-        btn.disabled = false;
-      }
+      localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
+      if ("Notification" in window) Notification.requestPermission();
+      renderCustomerCard();
+      startCloudSync();
     }
 
     function renderCustomerCard() {
       showView('view-client-card');
-
       document.getElementById('client-name-display').innerText = currentCustomer.name;
       document.getElementById('client-email-display').innerText = currentCustomer.email;
-      document.getElementById('client-stamp-counter').innerText = currentCustomer.stamps + ' / ' + MAX_STAMPS + ' SELLOS';
       document.getElementById('client-uid-tag').innerText = 'UID: ' + currentCustomer.uid;
+      document.getElementById('client-stamp-counter').innerText = currentCustomer.stamps + ' / ' + MAX_STAMPS + ' SELLOS';
       document.getElementById('client-progress-bar').style.width = ((currentCustomer.stamps / MAX_STAMPS) * 100) + '%';
 
       const grid = document.getElementById('client-stamps-grid');
@@ -356,236 +247,167 @@
       for (let i = 1; i <= MAX_STAMPS; i++) {
         const isFilled = i <= currentCustomer.stamps;
         const isReward = i === MAX_STAMPS;
-        const box = document.createElement('div');
-        box.className = `h-20 rounded-2xl flex flex-col items-center justify-center transition-all ${
-          isFilled ? 'stamp-filled scale-[1.02]' : isReward ? 'stamp-empty border-white/30' : 'stamp-empty'
-        }`;
-
-        if (isFilled) {
-          box.innerHTML = `
-            <svg class="w-6 h-6 text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.8)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-            </svg>
-            <span class="text-[8px] font-tech text-slate-300 uppercase tracking-widest mt-1">CONFIRMADO</span>
-          `;
-        } else if (isReward) {
-          box.innerHTML = `
-            <span class="text-sm font-tech font-bold text-slate-400">✦</span>
-            <span class="text-[8px] font-tech text-slate-500 uppercase tracking-widest mt-1">PREMIO</span>
-          `;
-        } else {
-          box.innerHTML = `<span class="text-sm font-tech font-bold text-slate-600">${i}</span>`;
-        }
-        grid.appendChild(box);
+        grid.innerHTML += `<div class="h-20 rounded-2xl flex flex-col items-center justify-center ${isFilled ? 'stamp-filled scale-[1.02]' : isReward ? 'stamp-empty border-white/30' : 'stamp-empty'}">
+          ${isFilled ? '<span class="text-white font-bold text-xl">✓</span>' : isReward ? '<span class="text-slate-400 font-bold text-sm">✦</span>' : `<span class="text-slate-600 font-bold">${i}</span>`}
+        </div>`;
       }
 
+      // QR INFALIBLE: Contiene toda la información del cliente
       const qrBox = document.getElementById('qrcode-target');
       qrBox.innerHTML = '';
       new QRCode(qrBox, {
-        text: currentCustomer.uid,
-        width: 130,
-        height: 130,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.M
+        text: JSON.stringify(currentCustomer),
+        width: 140, height: 140, colorDark: "#000000", colorLight: "#ffffff"
       });
-
-      const statusNote = document.getElementById('client-status-note');
-      if (currentCustomer.stamps >= MAX_STAMPS) {
-        statusNote.innerHTML = '<span class="text-emerald-400 font-extrabold">¡RECOMPENSA DISPONIBLE! CANJEA EN CAJA</span>';
-      } else {
-        statusNote.innerText = 'PRESENTAR ESTE QR EN CAJA';
-      }
     }
 
+    // CLIENTE: Sincronización y Notificaciones
     function startCloudSync() {
       if (syncIntervalId) clearInterval(syncIntervalId);
-
+      // Petición cada 2 segundos con timestamp para evitar la caché obligatoriamente
       syncIntervalId = setInterval(async () => {
-        if (!currentCustomer || !currentCustomer.uid) return;
         try {
-          const res = await fetch('/api/sync?uid=' + currentCustomer.uid);
+          const res = await fetch(`/api/sync?uid=${currentCustomer.uid}&nocache=${Date.now()}`);
           if (res.ok) {
             const data = await res.json();
-
-            if (data.stamps !== currentCustomer.stamps) {
+            
+            // Actualizar sellos si cambiaron
+            if (data.stamps !== undefined && data.stamps !== currentCustomer.stamps) {
               currentCustomer.stamps = data.stamps;
               localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
-              if (navigator.vibrate) navigator.vibrate(80);
+              if(navigator.vibrate) navigator.vibrate([100,50,100]);
               renderCustomerCard();
             }
 
-            if (data.pendingNotification && data.pendingNotification.id !== lastHandledNotificationId) {
-              lastHandledNotificationId = data.pendingNotification.id;
-              triggerClientLocalNotification(data.pendingNotification.title, data.pendingNotification.body);
+            // Disparar notificación si hay una nueva
+            if (data.pendingNotification && data.pendingNotification.id !== lastNotifId) {
+              lastNotifId = data.pendingNotification.id;
+              fireNotification(data.pendingNotification.title, data.pendingNotification.body);
             }
           }
         } catch (e) {}
       }, 2000);
     }
 
-    function triggerClientLocalNotification(title, body) {
-      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-      if (swRegistration && "showNotification" in swRegistration) {
-        swRegistration.showNotification(title, {
-          body: body,
-          icon: '/icon-192.png',
-          badge: '/icon-192.png'
-        });
-      } else if ("Notification" in window && Notification.permission === "granted") {
+    function fireNotification(title, body) {
+      if(navigator.vibrate) navigator.vibrate([200,100,200,100,200]);
+      
+      // Intento 1: API de Sistema
+      if ("Notification" in window && Notification.permission === "granted") {
         new Notification(title, { body: body, icon: '/icon-192.png' });
-      }
+      } 
+      
+      // Intento 2: In-App (Siempre se muestra para asegurar que el cliente la vea)
+      document.getElementById('in-app-title').innerText = title;
+      document.getElementById('in-app-body').innerText = body;
+      document.getElementById('in-app-notification').style.top = '10px';
+    }
+
+    function closeInAppNotification() {
+      document.getElementById('in-app-notification').style.top = '-100%';
     }
 
     function logoutCustomer() {
-      if (confirm("¿Deseas cerrar tu sesión en este dispositivo?")) {
-        localStorage.removeItem('aura_customer_profile');
-        currentCustomer = null;
-        showView('view-portal');
-      }
+      localStorage.removeItem('aura_customer_profile');
+      showView('view-portal');
     }
 
+    // TRABAJADOR: Inicio de sesión y Cámara
     function verifyStaffPIN() {
-      const pin = document.getElementById('staff-pin-input').value.trim();
-      if (pin === STAFF_PIN) {
+      if (document.getElementById('staff-pin-input').value === STAFF_PIN) {
         document.getElementById('staff-pin-input').value = '';
         showView('view-staff-dashboard');
-        launchDirectCamera();
-      } else {
-        alert("NIP incorrecto. Intenta nuevamente.");
-      }
-    }
-
-    function launchDirectCamera() {
-      if (qrReaderInstance) {
-        qrReaderInstance.stop().catch(() => {}).then(() => startScannerStream());
-      } else {
-        startScannerStream();
-      }
-    }
-
-    function startScannerStream() {
-      qrReaderInstance = new Html5Qrcode("scanner-video");
-      const config = { fps: 10, qrbox: { width: 220, height: 220 } };
-
-      qrReaderInstance.start(
-        { facingMode: "environment" },
-        config,
-        (decodedText) => onBarcodeDetected(decodedText),
-        (errorMessage) => {}
-      ).catch(err => {
-        document.getElementById('scanner-video').innerText = "Permiso de cámara no concedido.";
-      });
+        qrReaderInstance = new Html5Qrcode("scanner-video");
+        qrReaderInstance.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 220, height: 220 } },
+          (text) => processScannedQR(text),
+          (err) => {}
+        ).catch(() => alert("Da permisos de cámara al navegador."));
+      } else alert("PIN Incorrecto.");
     }
 
     function stopCameraAndExit() {
       if (qrReaderInstance) {
-        qrReaderInstance.stop().then(() => {
-          qrReaderInstance.clear();
-          showView('view-portal');
-        }).catch(() => {
-          showView('view-portal');
-        });
-      } else {
-        showView('view-portal');
-      }
+        qrReaderInstance.stop().then(() => { qrReaderInstance.clear(); showView('view-portal'); });
+      } else showView('view-portal');
     }
 
-    function searchManualUid() {
-      const val = document.getElementById('manual-uid-input').value.trim();
-      if (val) {
-        onBarcodeDetected(val);
-      }
-    }
-
-    async function onBarcodeDetected(rawUid) {
-      let cleanUid = rawUid.trim();
-
+    // TRABAJADOR: Procesamiento Infalible de QR
+    async function processScannedQR(rawText) {
+      let parsed = null;
       try {
-        const parsed = JSON.parse(cleanUid);
-        if (parsed.uid) cleanUid = parsed.uid;
-      } catch (e) {}
+        // Lee directamente los datos del código QR (Evita el error de "no detectado")
+        parsed = JSON.parse(rawText);
+      } catch(e) {
+        alert("Escaneaste un QR que no es de AURA."); return;
+      }
 
-      try {
-        const res = await fetch('/api/sync?uid=' + cleanUid);
-        if (res.ok) {
-          targetCustomer = await res.json();
-          document.getElementById('staff-client-card').classList.remove('hidden');
-          document.getElementById('scanned-client-name').innerText = targetCustomer.name;
-          document.getElementById('scanned-client-email').innerText = targetCustomer.email;
-          document.getElementById('scanned-client-stamps').innerText = targetCustomer.stamps + ' / ' + MAX_STAMPS;
-          if (navigator.vibrate) navigator.vibrate(60);
-        } else {
-          alert("Cliente no registrado en la base de datos: " + cleanUid);
-        }
-      } catch (err) {
-        alert("Error de conexión al buscar cliente: " + err.message);
+      if (parsed && parsed.uid) {
+        targetCustomer = parsed; // Carga inmediata desde el QR
+        
+        // Intenta actualizar los sellos desde la nube si hay internet
+        try {
+          const res = await fetch(`/api/sync?uid=${targetCustomer.uid}&nocache=${Date.now()}`);
+          if (res.ok) {
+            const freshData = await res.json();
+            targetCustomer.stamps = freshData.stamps !== undefined ? freshData.stamps : targetCustomer.stamps;
+          }
+        } catch(e) { console.log("Trabajando offline / sin nube"); }
+
+        document.getElementById('staff-client-card').classList.remove('hidden');
+        document.getElementById('scanned-client-name').innerText = targetCustomer.name;
+        document.getElementById('scanned-client-uid').innerText = targetCustomer.uid;
+        document.getElementById('scanned-client-stamps').innerText = targetCustomer.stamps + ' / ' + MAX_STAMPS;
+        if(navigator.vibrate) navigator.vibrate(60);
       }
     }
 
+    // TRABAJADOR: Añadir Sello
     async function applyStampCloud() {
       if (!targetCustomer) return;
+      if (targetCustomer.stamps >= MAX_STAMPS) { alert("Tarjeta llena"); return; }
+      
       const btn = document.getElementById('btn-add-stamp');
-      btn.disabled = true;
+      btn.innerText = "Sellando..."; btn.disabled = true;
+
+      targetCustomer.stamps += 1;
+      document.getElementById('scanned-client-stamps').innerText = targetCustomer.stamps + ' / ' + MAX_STAMPS;
 
       try {
-        const res = await fetch('/api/sync', {
+        await fetch('/api/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            uid: targetCustomer.uid,
-            action: 'ADD_STAMP'
-          })
+          body: JSON.stringify({ uid: targetCustomer.uid, action: 'ADD_STAMP', customerData: targetCustomer })
         });
-
-        if (res.ok) {
-          targetCustomer = await res.json();
-          document.getElementById('scanned-client-stamps').innerText = targetCustomer.stamps + ' / ' + MAX_STAMPS;
-          alert("Sello aplicado a " + targetCustomer.name + " en la nube.");
-        }
+        if(navigator.vibrate) navigator.vibrate([50,50,50]);
       } catch (err) {
-        alert("Error al aplicar sello: " + err.message);
-      } finally {
-        btn.disabled = false;
+        alert("El sello se aplicó, pero la base de datos de Cloudflare falló. Verifica tu archivo KV.");
       }
+      btn.innerText = "+ Sellar"; btn.disabled = false;
     }
 
     async function redeemRewardCloud() {
       if (!targetCustomer) return;
-      if (targetCustomer.stamps < MAX_STAMPS) {
-        alert("El cliente no tiene los sellos necesarios.");
-        return;
-      }
+      targetCustomer.stamps = 0;
+      document.getElementById('scanned-client-stamps').innerText = '0 / ' + MAX_STAMPS;
 
       try {
-        const res = await fetch('/api/sync', {
+        await fetch('/api/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            uid: targetCustomer.uid,
-            action: 'REDEEM'
-          })
+          body: JSON.stringify({ uid: targetCustomer.uid, action: 'REDEEM' })
         });
-
-        if (res.ok) {
-          targetCustomer = await res.json();
-          document.getElementById('scanned-client-stamps').innerText = '0 / ' + MAX_STAMPS;
-          alert("Recompensa canjeada. Tarjeta reiniciada con éxito.");
-        }
-      } catch (err) {
-        alert("Error al canjear: " + err.message);
-      }
+        alert("Premio canjeado. Tarjeta en cero.");
+      } catch (err) {}
     }
 
+    // TRABAJADOR: Enviar Notificación
     async function sendPushToClient() {
       if (!targetCustomer) return;
-      const title = document.getElementById('target-push-title').value.trim();
-      const body = document.getElementById('target-push-body').value.trim();
-
-      if (!title || !body) {
-        alert("Escribe el título y el mensaje");
-        return;
-      }
+      const title = document.getElementById('target-push-title').value;
+      const body = document.getElementById('target-push-body').value;
+      if (!title || !body) { alert("Llena el título y mensaje"); return; }
 
       try {
         const res = await fetch('/api/sync', {
@@ -597,25 +419,17 @@
             notification: { title, body }
           })
         });
-
         if (res.ok) {
-          alert("Notificación enviada al teléfono de " + targetCustomer.name);
+          alert("¡Mensaje disparado al teléfono del cliente!");
           document.getElementById('target-push-title').value = '';
           document.getElementById('target-push-body').value = '';
         }
-      } catch (err) {
-        alert("Error al enviar notificación: " + err.message);
-      }
+      } catch (err) { alert("Error de red"); }
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      const saved = localStorage.getItem('aura_customer_profile');
-      if (saved) {
-        goToClientPortal();
-      } else {
-        showView('view-portal');
-      }
-    });
+    window.onload = () => {
+      if(localStorage.getItem('aura_customer_profile')) goToClientPortal();
+    };
   </script>
 </body>
 </html>
