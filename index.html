@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -10,7 +11,9 @@
   <meta name="apple-mobile-web-app-title" content="AURA Pass">
   
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Generador QR -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Lector QR -->
   <script src="https://unpkg.com/html5-qrcode"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -97,7 +100,7 @@
     </div>
     <div class="titanium-card p-6 rounded-3xl flex flex-col gap-4">
       <input type="password" id="staff-pin-input" maxlength="6" inputmode="numeric" placeholder="••••••" class="w-full bg-black/60 border border-white/20 rounded-xl py-3 text-center text-2xl tracking-[0.5em] text-white focus:outline-none">
-      <button onclick="verifyStaffPIN()" class="w-full bg-white text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl active:scale-95">Ingresar</button>
+      <button onclick="verifyStaffPIN()" class="w-full bg-white text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl shadow active:scale-95">Ingresar</button>
     </div>
     <button onclick="showView('view-portal')" class="text-xs text-slate-500">Volver</button>
   </section>
@@ -105,7 +108,7 @@
   <!-- TARJETA DEL CLIENTE -->
   <section id="view-client-card" class="hidden w-full max-w-sm flex flex-col items-center gap-5 my-auto">
     <header class="w-full flex justify-between px-1">
-      <span class="text-[10px] font-tech text-emerald-400 uppercase">● Pase Activo</span>
+      <span class="text-[10px] font-tech text-emerald-400 uppercase">● Sincronización Automática</span>
       <button onclick="logoutCustomer()" class="text-[10px] font-tech text-slate-500 uppercase">Salir</button>
     </header>
 
@@ -128,14 +131,11 @@
       <div id="client-stamps-grid" class="grid grid-cols-3 gap-3"></div>
 
       <div class="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col items-center">
-        <div class="bg-white p-2 rounded-xl" id="qrcode-target"></div>
+        <!-- Contenedor del QR Simplificado -->
+        <div class="bg-white p-3 rounded-xl" id="qrcode-target"></div>
         <span class="text-[10px] font-tech text-slate-300 font-bold mt-3 uppercase text-center" id="client-status-note">Escanear QR en caja</span>
+        <span class="text-[9px] font-mono text-slate-500 mt-1" id="client-uid-tag">UID: ---</span>
       </div>
-
-      <!-- BOTÓN DE ACTUALIZACIÓN MANUAL PARA EL CLIENTE -->
-      <button id="btn-force-sync" onclick="forceClientSync()" class="w-full bg-white/10 hover:bg-white/20 text-white font-tech text-xs uppercase py-3 rounded-xl border border-white/10 transition-all active:scale-95">
-        ↻ Sincronizar Sellos
-      </button>
     </main>
   </section>
 
@@ -182,8 +182,8 @@
     const MAX_STAMPS = 6;
     const STAFF_PIN = "123456";
     let qrReaderInstance = null;
-    let currentCustomer = null; // Memoria del cliente que usa el teléfono
-    let targetCustomer = null;  // Memoria del cliente que fue escaneado
+    let currentCustomer = null; 
+    let targetCustomer = null;  
     let syncIntervalId = null;
     let lastNotifId = 0;
 
@@ -197,7 +197,7 @@
     }
 
     /* =========================================
-       LÓGICA DEL CLIENTE (MI TARJETA)
+       LÓGICA DEL CLIENTE 
        ========================================= */
     async function goToClientPortal() {
       const saved = localStorage.getItem('aura_customer_profile');
@@ -226,7 +226,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ uid: currentCustomer.uid, action: 'REGISTER', customerData: currentCustomer })
         });
-      } catch(e) { console.log("Se guardará de forma local"); }
+      } catch(e) {}
 
       localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
       renderCustomerCard();
@@ -237,6 +237,7 @@
       showView('view-client-card');
       document.getElementById('client-name-display').innerText = currentCustomer.name;
       document.getElementById('client-email-display').innerText = currentCustomer.email;
+      document.getElementById('client-uid-tag').innerText = 'UID: ' + currentCustomer.uid;
       document.getElementById('client-stamp-counter').innerText = currentCustomer.stamps + ' / ' + MAX_STAMPS + ' SELLOS';
       document.getElementById('client-progress-bar').style.width = ((currentCustomer.stamps / MAX_STAMPS) * 100) + '%';
 
@@ -250,42 +251,44 @@
         </div>`;
       }
 
+      // 1. QR EXTREMADAMENTE SENCILLO: Solo contiene el UID, lo que hace que los cuadros sean grandes
       const qrBox = document.getElementById('qrcode-target');
       qrBox.innerHTML = '';
       new QRCode(qrBox, {
-        text: JSON.stringify(currentCustomer),
-        width: 140, height: 140, colorDark: "#000000", colorLight: "#ffffff"
+        text: currentCustomer.uid,
+        width: 160, 
+        height: 160, 
+        colorDark: "#000000", 
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.L // Nivel L: Menos puntos, escaneo ultrarrápido
       });
     }
 
+    // 2. SINCRONIZACIÓN INVISIBLE Y AUTOMÁTICA
     function startCloudSync() {
       if (syncIntervalId) clearInterval(syncIntervalId);
-      syncIntervalId = setInterval(forceClientSync, 3000);
-    }
-
-    async function forceClientSync() {
-      if (!currentCustomer) return;
-      const btn = document.getElementById('btn-force-sync');
-      if(btn) btn.innerText = "Sincronizando...";
-
-      try {
-        const res = await fetch(`/api/sync?uid=${currentCustomer.uid}&nocache=${Date.now()}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.stamps !== undefined && data.stamps !== currentCustomer.stamps) {
-            currentCustomer.stamps = data.stamps;
-            localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
-            if(navigator.vibrate) navigator.vibrate(80);
-            renderCustomerCard();
+      // Se ejecuta silenciosamente cada 3 segundos en segundo plano
+      syncIntervalId = setInterval(async () => {
+        if (!currentCustomer) return;
+        try {
+          const res = await fetch(`/api/sync?uid=${currentCustomer.uid}&nocache=${Date.now()}`);
+          if (res.ok) {
+            const data = await res.json();
+            // Si la nube tiene sellos diferentes al celular, actualiza la pantalla solo
+            if (data.stamps !== undefined && data.stamps !== currentCustomer.stamps) {
+              currentCustomer.stamps = data.stamps;
+              localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
+              if(navigator.vibrate) navigator.vibrate([100,50]);
+              renderCustomerCard();
+            }
+            // Si hay una notificación pendiente
+            if (data.pendingNotification && data.pendingNotification.id !== lastNotifId) {
+              lastNotifId = data.pendingNotification.id;
+              fireNotification(data.pendingNotification.title, data.pendingNotification.body);
+            }
           }
-          if (data.pendingNotification && data.pendingNotification.id !== lastNotifId) {
-            lastNotifId = data.pendingNotification.id;
-            fireNotification(data.pendingNotification.title, data.pendingNotification.body);
-          }
-        }
-      } catch (e) {}
-
-      if(btn) btn.innerText = "↻ Sincronizar Sellos";
+        } catch (e) {}
+      }, 3000);
     }
 
     function fireNotification(title, body) {
@@ -296,10 +299,14 @@
     }
 
     function closeInAppNotification() { document.getElementById('in-app-notification').style.top = '-100%'; }
-    function logoutCustomer() { localStorage.removeItem('aura_customer_profile'); showView('view-portal'); }
+    
+    function logoutCustomer() { 
+      localStorage.removeItem('aura_customer_profile'); 
+      showView('view-portal'); 
+    }
 
     /* =========================================
-       LÓGICA DEL TRABAJADOR (OFLINE-FIRST)
+       LÓGICA DEL TRABAJADOR
        ========================================= */
     function verifyStaffPIN() {
       if (document.getElementById('staff-pin-input').value === STAFF_PIN) {
@@ -320,41 +327,36 @@
       else showView('view-portal');
     }
 
-    // EL LECTOR AHORA PRIORIZA SU PROPIA MEMORIA (INFALIBLE)
     async function processScannedQR(rawText) {
-      let parsed = null;
-      try { parsed = JSON.parse(rawText); } catch(e) { return; }
+      let uid = rawText.trim();
+      
+      // Respaldo por si se escanea un QR viejo que era un JSON
+      try { let parsed = JSON.parse(uid); if (parsed.uid) uid = parsed.uid; } catch(e) {}
 
-      if (parsed && parsed.uid) {
-        targetCustomer = parsed; 
-        
-        // 1. Rescatar la memoria interna invencible del trabajador
-        const workerMemory = localStorage.getItem('aura_staff_db_' + targetCustomer.uid);
-        if (workerMemory) {
-          const localData = JSON.parse(workerMemory);
-          if (localData.stamps !== undefined) targetCustomer.stamps = localData.stamps;
+      // Busca al cliente en la nube
+      try {
+        const res = await fetch(`/api/sync?uid=${uid}&nocache=${Date.now()}`);
+        if (res.ok) {
+          targetCustomer = await res.json();
+        } else {
+          throw new Error("No en la nube");
         }
-
-        // 2. Intentar descargar de la nube si hay internet
-        try {
-          const res = await fetch(`/api/sync?uid=${targetCustomer.uid}&nocache=${Date.now()}`);
-          if (res.ok) {
-            const freshData = await res.json();
-            if (freshData.stamps !== undefined) targetCustomer.stamps = freshData.stamps;
-          }
-        } catch(e) {}
-
-        // 3. Guardar el estado consolidado de nuevo en la memoria del trabajador
-        localStorage.setItem('aura_staff_db_' + targetCustomer.uid, JSON.stringify(targetCustomer));
-
-        document.getElementById('staff-client-card').classList.remove('hidden');
-        document.getElementById('scanned-client-name').innerText = targetCustomer.name;
-        document.getElementById('scanned-client-uid').innerText = targetCustomer.uid;
-        document.getElementById('scanned-client-stamps').innerText = targetCustomer.stamps + ' / ' + MAX_STAMPS;
-        if(navigator.vibrate) navigator.vibrate(60);
+      } catch(e) {
+        // Si no hay internet, busca en la memoria del trabajador
+        const local = localStorage.getItem('aura_staff_db_' + uid);
+        if (local) targetCustomer = JSON.parse(local);
+        else { alert("Cliente no encontrado en la base de datos."); return; }
       }
+
+      // Muestra la ficha
+      document.getElementById('staff-client-card').classList.remove('hidden');
+      document.getElementById('scanned-client-name').innerText = targetCustomer.name;
+      document.getElementById('scanned-client-uid').innerText = targetCustomer.uid;
+      document.getElementById('scanned-client-stamps').innerText = targetCustomer.stamps + ' / ' + MAX_STAMPS;
+      if(navigator.vibrate) navigator.vibrate(60);
     }
 
+    // 3. SOBRESCRITURA FORZADA A LA NUBE
     async function applyStampWorker() {
       if (!targetCustomer) return;
       if (targetCustomer.stamps >= MAX_STAMPS) { alert("Tarjeta llena"); return; }
@@ -362,21 +364,21 @@
       const btn = document.getElementById('btn-add-stamp');
       btn.innerText = "Sellando..."; btn.disabled = true;
 
-      // 1. APLICAR SELLO EN LA MEMORIA DEL TRABAJADOR AL INSTANTE (Jamás se pierde)
+      // Suma el sello en el trabajador
       targetCustomer.stamps += 1;
       document.getElementById('scanned-client-stamps').innerText = targetCustomer.stamps + ' / ' + MAX_STAMPS;
+      
+      // Guarda en la memoria del trabajador
       localStorage.setItem('aura_staff_db_' + targetCustomer.uid, JSON.stringify(targetCustomer));
 
-      // 2. Intentar subir a Cloudflare
-      try {
-        await fetch('/api/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ uid: targetCustomer.uid, action: 'ADD_STAMP', customerData: targetCustomer })
-        });
-        if(navigator.vibrate) navigator.vibrate([50,50,50]);
-      } catch (err) {}
+      // Sobrescribe obligatoriamente el perfil en la nube con este nuevo contador exacto
+      fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: targetCustomer.uid, action: 'REGISTER', customerData: targetCustomer })
+      });
       
+      if(navigator.vibrate) navigator.vibrate([50,50,50]);
       btn.innerText = "+ Sellar"; btn.disabled = false;
     }
 
@@ -387,14 +389,12 @@
       document.getElementById('scanned-client-stamps').innerText = '0 / ' + MAX_STAMPS;
       localStorage.setItem('aura_staff_db_' + targetCustomer.uid, JSON.stringify(targetCustomer));
 
-      try {
-        await fetch('/api/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ uid: targetCustomer.uid, action: 'REDEEM' })
-        });
-        alert("Premio canjeado. Tarjeta en cero.");
-      } catch (err) {}
+      fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: targetCustomer.uid, action: 'REGISTER', customerData: targetCustomer })
+      });
+      alert("Premio canjeado. Tarjeta en cero.");
     }
 
     async function sendPushWorker() {
@@ -403,22 +403,21 @@
       const body = document.getElementById('target-push-body').value;
       if (!title || !body) { alert("Llena el título y mensaje"); return; }
 
-      try {
-        const res = await fetch('/api/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            uid: targetCustomer.uid,
-            action: 'SEND_NOTIFICATION',
-            notification: { title, body }
-          })
-        });
-        if (res.ok) {
-          alert("¡Mensaje disparado a la pantalla de " + targetCustomer.name + "!");
+      fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid: targetCustomer.uid,
+          action: 'SEND_NOTIFICATION',
+          notification: { title, body }
+        })
+      }).then(res => {
+        if(res.ok) {
+          alert("¡Mensaje en camino al teléfono de " + targetCustomer.name + "!");
           document.getElementById('target-push-title').value = '';
           document.getElementById('target-push-body').value = '';
         }
-      } catch (err) {}
+      });
     }
 
     window.onload = () => {
