@@ -2,102 +2,252 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi Tarjeta de Fidelidad</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Pase VIP de Fidelidad</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Mi Tarjeta">
+  <meta name="apple-mobile-web-app-title" content="Pase VIP">
   <link rel="apple-touch-icon" href="/icon-192.png">
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Generador de Códigos QR de alta resolución -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  
+  <style>
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 25px rgba(234, 179, 8, 0.2), inset 0 0 15px rgba(234, 179, 8, 0.1); }
+      50% { box-shadow: 0 0 35px rgba(234, 179, 8, 0.4), inset 0 0 20px rgba(234, 179, 8, 0.2); }
+    }
+    .neon-card {
+      background: radial-gradient(120% 120% at 50% 0%, #1e1f2b 0%, #0d0e15 100%);
+      animation: pulseGlow 5s infinite ease-in-out;
+    }
+    .glass-specular {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 60%, rgba(255, 255, 255, 0) 100%);
+    }
+  </style>
 </head>
-<body class="bg-gray-950 text-white min-h-screen flex flex-col items-center justify-center p-4 selection:bg-yellow-500 selection:text-black">
+<body class="bg-[#07080c] text-white min-h-screen flex flex-col items-center justify-between p-4 selection:bg-yellow-500 selection:text-black font-sans">
 
-  <main class="w-full max-w-sm bg-gray-900 border border-gray-800 rounded-3xl p-6 shadow-2xl flex flex-col items-center">
+  <!-- Encabezado superior -->
+  <header class="w-full max-w-sm flex items-center justify-between pt-2 pb-4">
+    <div class="flex items-center gap-2">
+      <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></div>
+      <span class="text-[11px] font-mono tracking-widest text-emerald-400 uppercase">Pase Activo</span>
+    </div>
+    <span class="text-[11px] font-mono text-gray-500 uppercase tracking-widest" id="customer-id-tag">ID: CARGANDO...</span>
+  </header>
+
+  <!-- Tarjeta VIP Interactiva -->
+  <main class="w-full max-w-sm neon-card border border-yellow-500/30 rounded-[2.5rem] p-6 shadow-2xl relative overflow-hidden flex flex-col gap-6">
     
-    <header class="text-center mb-6">
-      <span class="text-xs uppercase tracking-widest text-yellow-400 font-semibold">Club Exclusivo</span>
-      <h1 class="text-2xl font-bold mt-1">Cafetería Central</h1>
-      <p class="text-sm text-gray-400 mt-1">Acumula 6 sellos y obtén un consumo de regalo</p>
-    </header>
+    <!-- Reflejo de cristal -->
+    <div class="absolute inset-0 glass-specular pointer-events-none rounded-[2.5rem]"></div>
+    
+    <!-- Chip Contactless & Marca -->
+    <div class="flex items-center justify-between z-10">
+      <div>
+        <span class="text-[10px] font-mono tracking-[0.25em] text-yellow-400 font-semibold uppercase block">Club Privado</span>
+        <h1 class="text-2xl font-black tracking-tight text-white mt-0.5">BLACK EDITION</h1>
+      </div>
+      <!-- Icono NFC Chip simulado -->
+      <div class="w-11 h-9 rounded-lg bg-gradient-to-tr from-yellow-600 via-amber-300 to-yellow-500 p-[1px] shadow-lg">
+        <div class="w-full h-full bg-[#181920] rounded-[7px] flex items-center justify-center">
+          <svg class="w-5 h-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+      </div>
+    </div>
 
-    <section class="grid grid-cols-3 gap-3 w-full mb-6">
-      <div class="h-20 rounded-2xl bg-yellow-500/10 border-2 border-yellow-500 flex flex-col items-center justify-center">
-        <span class="text-2xl">☕</span>
-        <span class="text-[10px] text-yellow-400 font-bold mt-1">LISTO</span>
+    <!-- Progreso de Sellos -->
+    <div class="z-10">
+      <div class="flex justify-between items-center text-xs font-mono mb-2">
+        <span class="text-gray-400 uppercase tracking-wider">Progreso de Visitas</span>
+        <span class="text-yellow-400 font-bold" id="stamp-counter">0 / 6 SELLOS</span>
       </div>
-      <div class="h-20 rounded-2xl bg-yellow-500/10 border-2 border-yellow-500 flex flex-col items-center justify-center">
-        <span class="text-2xl">☕</span>
-        <span class="text-[10px] text-yellow-400 font-bold mt-1">LISTO</span>
+      <div class="w-full bg-gray-800/80 rounded-full h-1.5 overflow-hidden p-[1px] border border-gray-700/50">
+        <div id="progress-bar" class="bg-gradient-to-r from-amber-500 to-yellow-300 h-full rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
       </div>
-      <div class="h-20 rounded-2xl bg-gray-800/50 border-2 border-dashed border-gray-700 flex flex-col items-center justify-center text-gray-500">
-        <span class="text-lg font-bold">3</span>
-      </div>
-      <div class="h-20 rounded-2xl bg-gray-800/50 border-2 border-dashed border-gray-700 flex flex-col items-center justify-center text-gray-500">
-        <span class="text-lg font-bold">4</span>
-      </div>
-      <div class="h-20 rounded-2xl bg-gray-800/50 border-2 border-dashed border-gray-700 flex flex-col items-center justify-center text-gray-500">
-        <span class="text-lg font-bold">5</span>
-      </div>
-      <div class="h-20 rounded-2xl bg-gray-800/50 border-2 border-dashed border-yellow-500/40 flex flex-col items-center justify-center text-yellow-500/60">
-        <span class="text-2xl">🎁</span>
-        <span class="text-[10px] font-bold mt-1">PREMIO</span>
-      </div>
+    </div>
+
+    <!-- Cuadrícula de Sellos Táctiles -->
+    <section id="stamp-grid" class="grid grid-cols-3 gap-3.5 z-10">
+      <!-- Los sellos se generan dinámicamente con JavaScript -->
     </section>
 
-    <footer class="w-full bg-gray-950/60 border border-gray-800/80 rounded-xl p-3 text-center">
-      <p class="text-xs text-gray-400">Muestra tu pantalla en caja para recibir tu sello</p>
-    </footer>
+    <!-- Área del Código QR Dinámico para Escaneo en Mostrador -->
+    <div class="bg-gradient-to-b from-[#13141c] to-[#0a0b10] border border-gray-800/90 rounded-2xl p-4 flex flex-col items-center justify-center z-10 shadow-inner">
+      <div class="bg-white p-2.5 rounded-xl shadow-md" id="qrcode-box"></div>
+      <span class="text-[11px] font-mono text-gray-400 tracking-wider mt-3" id="qr-label">PRESENTA EN CAJA AL CONSUMIR</span>
+      <p class="text-[9px] text-gray-500 mt-0.5">El empleado escaneará tu código para sellar la tarjeta</p>
+    </div>
   </main>
 
-  <!-- Botón nativo de instalación -->
-  <button id="btn-install" class="mt-6 bg-yellow-400 hover:bg-yellow-300 text-gray-950 font-bold py-3 px-6 rounded-2xl shadow-xl w-full max-w-sm transition-all transform active:scale-95 flex items-center justify-center gap-2">
-    <span>Descargar Tarjeta Oficial</span>
+  <!-- Panel de Control y Pruebas (Simulador de Caja) -->
+  <aside class="w-full max-w-sm mt-4 bg-gray-900/60 border border-gray-800/80 rounded-2xl p-3 flex items-center justify-between backdrop-blur-md">
+    <div class="text-[11px] font-mono text-gray-400">
+      <span class="text-yellow-400 font-bold block">SIMULADOR</span>
+      Toca una casilla o pulsa:
+    </div>
+    <div class="flex gap-2">
+      <button onclick="addStamp()" class="bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-xs px-3 py-1.5 rounded-xl shadow transition-all active:scale-95">
+        + Sellar
+      </button>
+      <button onclick="resetStamps()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs px-2.5 py-1.5 rounded-xl border border-gray-700 transition-all active:scale-95">
+        Reiniciar
+      </button>
+    </div>
+  </aside>
+
+  <!-- Botón nativo de instalación para Android -->
+  <button id="btn-install" class="hidden mt-4 bg-gradient-to-r from-yellow-500 to-amber-400 hover:from-yellow-400 hover:to-amber-300 text-gray-950 font-black py-3 px-6 rounded-2xl shadow-xl w-full max-w-sm transition-all transform active:scale-95 uppercase tracking-wider text-xs flex items-center justify-center gap-2">
+    <span>Guardar Tarjeta Oficial</span>
   </button>
 
-  <div id="ios-guide" class="hidden mt-6 bg-blue-950/40 border border-blue-500/40 text-blue-200 p-4 rounded-2xl max-w-sm text-center text-sm shadow-lg">
-    <p>Para guardar tu tarjeta en iPhone:</p>
-    <p class="mt-2 text-xs text-blue-300">
-      Pulsa <span class="font-bold underline text-white">Compartir</span> abajo y luego <span class="font-bold underline text-white">Añadir a pantalla de inicio</span>.
+  <!-- Banner guiado para iPhone (Safari) -->
+  <div id="ios-guide" class="hidden mt-4 bg-gray-900/90 border border-yellow-500/40 text-gray-200 p-4 rounded-2xl max-w-sm text-center text-xs shadow-xl">
+    <p class="font-bold text-yellow-400">¿Guardar esta tarjeta en tu iPhone?</p>
+    <p class="mt-1 text-gray-400">
+      Pulsa el botón <span class="font-bold text-white underline">Compartir</span> abajo y luego selecciona <span class="font-bold text-white underline">Añadir a pantalla de inicio</span>.
     </p>
   </div>
 
   <script>
+    // Registro del Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js');
       });
     }
 
-    let installPromptEvent = null;
+    // Configuración de Identidad y Almacenamiento Persistente
+    const TOTAL_STAMPS = 6;
+    let customerId = localStorage.getItem('loyalty_customer_id');
+    if (!customerId) {
+      customerId = 'VIP-' + Math.floor(100000 + Math.random() * 900000);
+      localStorage.setItem('loyalty_customer_id', customerId);
+    }
+    document.getElementById('customer-id-tag').innerText = 'ID: ' + customerId;
+
+    let currentStamps = parseInt(localStorage.getItem('loyalty_stamps') || '0');
+
+    // Generación del Código QR Único del Cliente
+    new QRCode(document.getElementById("qrcode-box"), {
+      text: "https://tarjeta-club.pages.dev/?cliente=" + customerId,
+      width: 130,
+      height: 130,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
+    });
+
+    // Renderizado de las casillas de sellos
+    function renderStamps() {
+      const grid = document.getElementById('stamp-grid');
+      const counter = document.getElementById('stamp-counter');
+      const progressBar = document.getElementById('progress-bar');
+      grid.innerHTML = '';
+
+      counter.innerText = currentStamps + ' / ' + TOTAL_STAMPS + ' SELLOS';
+      progressBar.style.width = ((currentStamps / TOTAL_STAMPS) * 100) + '%';
+
+      for (let i = 1; i <= TOTAL_STAMPS; i++) {
+        const isStamped = i <= currentStamps;
+        const isPrize = i === TOTAL_STAMPS;
+        const box = document.createElement('div');
+        box.onclick = () => toggleStamp(i);
+
+        box.className = `h-20 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 cursor-pointer select-none relative overflow-hidden ${
+          isStamped 
+            ? 'bg-gradient-to-b from-yellow-500/25 to-yellow-600/10 border-2 border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.3)] scale-[1.02]' 
+            : 'bg-[#12131b]/80 border border-dashed border-gray-700/80 hover:border-gray-500'
+        }`;
+
+        if (isStamped) {
+          box.innerHTML = `
+            <span class="text-2xl filter drop-shadow-[0_0_8px_rgba(234,179,8,0.8)]">${isPrize ? '👑' : '🔥'}</span>
+            <span class="text-[9px] font-black text-yellow-300 font-mono tracking-widest mt-1">SELLADO</span>
+          `;
+        } else if (isPrize) {
+          box.innerHTML = `
+            <span class="text-2xl opacity-60">🎁</span>
+            <span class="text-[9px] font-black text-yellow-500/70 font-mono tracking-widest mt-1">REGALO</span>
+          `;
+        } else {
+          box.innerHTML = `
+            <span class="text-lg font-mono font-bold text-gray-600">${i}</span>
+          `;
+        }
+        grid.appendChild(box);
+      }
+
+      if (currentStamps === TOTAL_STAMPS) {
+        document.getElementById('qr-label').innerHTML = '<span class="text-emerald-400 font-bold">¡PREMIO DESBLOQUEADO! RECLAMA TU CONSUMO</span>';
+      } else {
+        document.getElementById('qr-label').innerText = 'PRESENTA EN CAJA AL CONSUMIR';
+      }
+    }
+
+    // Funciones para interactuar con los sellos
+    function addStamp() {
+      if (currentStamps < TOTAL_STAMPS) {
+        currentStamps++;
+        localStorage.setItem('loyalty_stamps', currentStamps);
+        if (navigator.vibrate) navigator.vibrate(60);
+        renderStamps();
+      }
+    }
+
+    function toggleStamp(index) {
+      if (index === currentStamps + 1) {
+        addStamp();
+      } else if (index === currentStamps) {
+        currentStamps--;
+        localStorage.setItem('loyalty_stamps', currentStamps);
+        if (navigator.vibrate) navigator.vibrate(30);
+        renderStamps();
+      }
+    }
+
+    function resetStamps() {
+      currentStamps = 0;
+      localStorage.setItem('loyalty_stamps', '0');
+      if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+      renderStamps();
+    }
+
+    // Detección de Instalación Android / iOS
+    let deferredPrompt;
     const installButton = document.getElementById('btn-install');
     const iosBanner = document.getElementById('ios-guide');
 
-    window.addEventListener('beforeinstallprompt', (event) => {
-      event.preventDefault();
-      installPromptEvent = event;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installButton.classList.remove('hidden');
     });
 
     installButton.addEventListener('click', async () => {
-      if (installPromptEvent) {
-        installPromptEvent.prompt();
-        const result = await installPromptEvent.userChoice;
-        if (result.outcome === 'accepted') {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
           installButton.classList.add('hidden');
         }
-        installPromptEvent = null;
-      } else {
-        alert('Para instalar la tarjeta completa: abre el menú de opciones de tu navegador arriba a la derecha y selecciona "Instalar aplicación".');
+        deferredPrompt = null;
       }
     });
 
-    const isAppleDevice = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
-    const isRunningStandalone = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+    const isIos = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+    const isStandalone = () => ('standalone' in window.navigator) && (window.navigator.standalone);
 
-    if (isAppleDevice() && !isRunningStandalone()) {
-      installButton.classList.add('hidden');
+    if (isIos() && !isStandalone()) {
       iosBanner.classList.remove('hidden');
     }
+
+    // Inicializar visualización
+    renderStamps();
   </script>
 </body>
 </html>
