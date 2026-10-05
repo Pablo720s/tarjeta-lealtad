@@ -3,296 +3,463 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>LUMEN // Studio Club</title>
+  <title>AURA // Private Pass</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="LUMEN">
+  <meta name="apple-mobile-web-app-title" content="AURA Pass">
   <link rel="apple-touch-icon" href="/icon-192.png">
-  
+
+  <!-- Frameworks y Librerías -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <!-- Tipografía de Lujo Suizo -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;700;800;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
 
   <style>
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
     }
-    .font-mono-tech {
-      font-family: 'Space Mono', monospace;
+    .font-tech {
+      font-family: 'Space Grotesk', sans-serif;
     }
-    .glass-card {
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.15) 100%);
-      backdrop-filter: blur(28px) saturate(190%);
-      -webkit-backdrop-filter: blur(28px) saturate(190%);
-      border: 1px solid rgba(255, 255, 255, 0.65);
-      box-shadow: 0 30px 60px -12px rgba(15, 23, 42, 0.12), 
-                  0 18px 36px -18px rgba(15, 23, 42, 0.08),
-                  inset 0 1px 1px 0 rgba(255, 255, 255, 0.9);
+    .titanium-card {
+      background: radial-gradient(140% 120% at 50% 0%, #161922 0%, #0a0b0e 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 1px 1px 0 rgba(255, 255, 255, 0.2);
     }
-    .glass-inner {
-      background: rgba(255, 255, 255, 0.35);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.5);
+    .metallic-badge {
+      background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 50%, #475569 100%);
     }
-    .orb-glow-1 {
-      background: radial-gradient(circle, rgba(163, 230, 53, 0.55) 0%, rgba(59, 130, 246, 0.35) 45%, rgba(255, 255, 255, 0) 70%);
-      filter: blur(50px);
-    }
-    .orb-glow-2 {
-      background: radial-gradient(circle, rgba(217, 70, 239, 0.35) 0%, rgba(99, 102, 241, 0.25) 50%, rgba(255, 255, 255, 0) 70%);
-      filter: blur(60px);
-    }
-    .stamp-active {
-      background: radial-gradient(circle at 30% 30%, #ecfccb 0%, #a3e635 45%, #4d7c0f 100%);
-      box-shadow: 0 10px 25px -5px rgba(132, 204, 22, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.9);
+    .stamp-filled {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.3);
     }
     .stamp-empty {
-      background: rgba(255, 255, 255, 0.2);
-      border: 1.5px dashed rgba(100, 116, 139, 0.3);
-    }
-    .stamp-prize {
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(244, 244, 245, 0.2) 100%);
-      border: 1.5px dashed rgba(163, 230, 53, 0.8);
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px dashed rgba(255, 255, 255, 0.12);
     }
   </style>
 </head>
-<body class="bg-[#f2f4f8] text-[#0f172a] min-h-screen flex flex-col items-center justify-between p-4 selection:bg-[#a3e635] selection:text-black relative overflow-x-hidden">
+<body class="bg-[#060709] text-slate-100 min-h-screen flex flex-col items-center justify-between p-4 selection:bg-white selection:text-black">
 
-  <!-- Retícula ambiental y orbes de refracción líquida inspirados en Mural y Sapforce -->
-  <div class="fixed inset-0 pointer-events-none z-0">
-    <div class="absolute top-10 left-1/2 -translate-x-1/2 w-80 h-80 orb-glow-1 rounded-full"></div>
-    <div class="absolute bottom-10 right-0 w-72 h-72 orb-glow-2 rounded-full"></div>
-    <!-- Cruces técnicas de fondo estilo DgtlCore -->
-    <div class="absolute top-16 left-8 text-slate-300 font-mono-tech text-xs select-none">+</div>
-    <div class="absolute top-44 right-8 text-slate-300 font-mono-tech text-xs select-none">✦</div>
-    <div class="absolute bottom-40 left-10 text-slate-300 font-mono-tech text-xs select-none">✦</div>
-    <div class="absolute bottom-16 right-12 text-slate-300 font-mono-tech text-xs select-none">+</div>
-  </div>
-
-  <!-- Barra de navegación en píldora estilo DgtlCore / Sapforce -->
-  <header class="w-full max-w-sm flex items-center justify-between z-10 pt-2 pb-3">
-    <div class="glass-inner px-3 py-1 rounded-full flex items-center gap-2 shadow-sm">
-      <span class="w-2 h-2 rounded-full bg-[#a3e635] shadow-[0_0_8px_#a3e635]"></span>
-      <span class="text-[10px] font-mono-tech tracking-widest text-slate-600 uppercase font-bold">LUMEN // 01</span>
+  <!-- ========================================== -->
+  <!-- 1. VISTA: REGISTRO OBLIGATORIO DE CLIENTE -->
+  <!-- ========================================== -->
+  <div id="view-onboarding" class="hidden w-full max-w-sm my-auto flex flex-col gap-6">
+    <div class="text-center">
+      <span class="text-[10px] font-tech tracking-[0.3em] text-slate-400 uppercase font-semibold">Club Exclusivo</span>
+      <h1 class="text-3xl font-extrabold text-white mt-1">Únete a AURA</h1>
+      <p class="text-xs text-slate-400 mt-2">Registra tu pase personal para comenzar a acumular beneficios y recompensas exclusivas.</p>
     </div>
-    <div class="glass-inner px-3 py-1 rounded-full text-[10px] font-mono-tech text-slate-500 shadow-sm" id="customer-id-tag">
-      UID: SYNCING
-    </div>
-  </header>
 
-  <!-- Tipografía editorial monumental detrás del cristal inspirada en Sapforce y DgtlCore -->
-  <div class="w-full max-w-sm relative z-0 -mb-7 px-2">
-    <h2 class="text-[52px] font-black tracking-tighter text-slate-900/10 leading-none select-none uppercase">
-      LOYALTY.
-    </h2>
-  </div>
-
-  <!-- Tarjeta Escultural de Cristal Translúcido -->
-  <main class="w-full max-w-sm glass-card rounded-[2.5rem] p-6 relative z-10 flex flex-col gap-5">
-    
-    <!-- Encabezado de la tarjeta -->
-    <div class="flex items-start justify-between">
+    <form onsubmit="handleCustomerRegister(event)" class="titanium-card p-6 rounded-3xl flex flex-col gap-4">
       <div>
-        <span class="text-[9px] font-mono-tech tracking-[0.25em] text-slate-500 uppercase font-bold block">Exclusive Member Card</span>
-        <h1 class="text-2xl font-black tracking-tight text-slate-900 mt-0.5">The Green Arc</h1>
-        <p class="text-xs text-slate-600 font-normal mt-0.5">Visitas acumuladas & Recompensas</p>
+        <label class="text-[11px] font-tech text-slate-300 uppercase tracking-wider block mb-1.5">Nombre Completo</label>
+        <input type="text" id="reg-name" required placeholder="Ej. Carlos Mendoza" 
+               class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-white/40 transition-all">
       </div>
-      <!-- Insignia reflectiva cromada -->
-      <div class="w-10 h-10 rounded-2xl glass-inner flex items-center justify-center shadow-inner relative overflow-hidden">
-        <div class="w-4 h-4 rounded-full bg-gradient-to-tr from-slate-400 via-white to-slate-300 shadow-sm"></div>
+      <div>
+        <label class="text-[11px] font-tech text-slate-300 uppercase tracking-wider block mb-1.5">Correo Electrónico</label>
+        <input type="email" id="reg-email" required placeholder="carlos@ejemplo.com" 
+               class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-white/40 transition-all">
       </div>
-    </div>
-
-    <!-- Barra de progreso líquida -->
-    <div class="flex flex-col gap-1.5">
-      <div class="flex justify-between items-center text-[10px] font-mono-tech">
-        <span class="text-slate-500 uppercase tracking-wider">Progreso</span>
-        <span class="text-slate-800 font-bold" id="stamp-counter">0 / 6 SELLOS</span>
-      </div>
-      <div class="w-full bg-slate-200/60 rounded-full h-2 p-[2px] backdrop-blur-sm border border-white/60">
-        <div id="progress-bar" class="bg-gradient-to-r from-slate-900 via-slate-800 to-[#a3e635] h-full rounded-full transition-all duration-500 ease-out shadow-sm" style="width: 0%"></div>
-      </div>
-    </div>
-
-    <!-- Cuadrícula escultural de 6 sellos táctiles -->
-    <section id="stamp-grid" class="grid grid-cols-3 gap-3">
-      <!-- Los sellos se renderizan dinámicamente con JavaScript -->
-    </section>
-
-    <!-- Contenedor del Código QR Minimalista con panel de vidrio -->
-    <div class="glass-inner rounded-3xl p-4 flex flex-col items-center justify-center shadow-sm">
-      <div class="bg-white p-2.5 rounded-2xl shadow-sm border border-slate-100" id="qrcode-box"></div>
-      <span class="text-[10px] font-mono-tech text-slate-700 tracking-wider font-bold mt-3 uppercase text-center" id="qr-label">
-        Escanear en mostrador
-      </span>
-      <p class="text-[9px] text-slate-500 mt-0.5 font-normal">Presenta este código al ordenar</p>
-    </div>
-  </main>
-
-  <!-- Panel de control interactivo (Simulador para el negocio) -->
-  <aside class="w-full max-w-sm mt-3 glass-inner rounded-2xl p-2.5 flex items-center justify-between z-10 shadow-sm">
-    <div class="text-[10px] font-mono-tech text-slate-600 pl-2">
-      <span class="font-bold text-slate-900 block">SIMULADOR</span>
-      Toca casillas o añade:
-    </div>
-    <div class="flex gap-1.5">
-      <button onclick="addStamp()" class="bg-slate-900 hover:bg-black text-[#a3e635] font-mono-tech font-bold text-[11px] px-3 py-1.5 rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-1">
-        + SELLAR
+      <button type="submit" class="mt-2 w-full bg-white hover:bg-slate-200 text-black font-tech font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl shadow-lg transition-all active:scale-95">
+        Generar Mi Pase Personal
       </button>
-      <button onclick="resetStamps()" class="glass-card hover:bg-white/60 text-slate-600 text-[11px] px-2.5 py-1.5 rounded-xl transition-all active:scale-95 font-mono-tech">
-        LIMPIAR
-      </button>
-    </div>
-  </aside>
-
-  <!-- Botón nativo de instalación -->
-  <button id="btn-install" class="hidden mt-3 bg-slate-900 hover:bg-black text-white font-bold py-3 px-6 rounded-2xl shadow-xl w-full max-w-sm transition-all transform active:scale-95 text-xs font-mono-tech tracking-wider uppercase flex items-center justify-center gap-2 z-10 border border-slate-700">
-    <span>Guardar en Pantalla de Inicio</span>
-  </button>
-
-  <!-- Banner guiado para iOS Safari -->
-  <div id="ios-guide" class="hidden mt-3 glass-inner text-slate-700 p-3.5 rounded-2xl max-w-sm text-center text-xs shadow-md z-10">
-    <p class="font-bold text-slate-900">¿Instalar tarjeta en iPhone?</p>
-    <p class="mt-1 text-[11px] text-slate-600">
-      Toca <span class="font-bold text-slate-900 underline">Compartir</span> abajo y selecciona <span class="font-bold text-slate-900 underline">Añadir a pantalla de inicio</span>.
-    </p>
+    </form>
   </div>
 
+  <!-- ========================================== -->
+  <!-- 2. VISTA: PASE DEL CLIENTE (SIN AUTO-SELLO) -->
+  <!-- ========================================== -->
+  <div id="view-client" class="hidden w-full max-w-sm flex flex-col items-center gap-5 my-auto">
+    
+    <!-- Encabezado superior -->
+    <header class="w-full flex items-center justify-between px-1">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></span>
+        <span class="text-[10px] font-tech tracking-widest text-slate-400 uppercase font-semibold">Membresía Activa</span>
+      </div>
+      <span class="text-[10px] font-tech text-slate-500 tracking-wider" id="client-uid">UID: ----</span>
+    </header>
+
+    <!-- Tarjeta de Titanio -->
+    <main class="w-full titanium-card rounded-[2.2rem] p-6 relative overflow-hidden flex flex-col gap-6">
+      
+      <!-- Detalle superior de la tarjeta -->
+      <div class="flex items-start justify-between">
+        <div>
+          <span class="text-[9px] font-tech tracking-[0.25em] text-slate-400 uppercase font-bold block">Digital Loyalty Card</span>
+          <h2 class="text-xl font-extrabold text-white mt-0.5 tracking-tight" id="client-display-name">Miembro AURA</h2>
+          <p class="text-[11px] text-slate-400 font-mono" id="client-display-email">correo@cliente.com</p>
+        </div>
+        <!-- Emblema de titanio -->
+        <div class="w-9 h-9 rounded-xl metallic-badge p-[1px] shadow-lg flex items-center justify-center">
+          <div class="w-full h-full bg-[#0d0e12] rounded-[11px] flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barra de progreso minimalista -->
+      <div>
+        <div class="flex justify-between items-center text-[10px] font-tech mb-2">
+          <span class="text-slate-400 tracking-wider uppercase">Progreso de Visitas</span>
+          <span class="text-white font-bold tracking-wider" id="client-counter">0 / 6 SELLOS</span>
+        </div>
+        <div class="w-full bg-white/5 rounded-full h-1.5 overflow-hidden p-[1px] border border-white/10">
+          <div id="client-progress" class="bg-gradient-to-r from-slate-400 via-slate-100 to-white h-full rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Cuadrícula de 6 Sellos (Visualización protegida) -->
+      <section id="client-grid" class="grid grid-cols-3 gap-3">
+        <!-- Generado dinámicamente -->
+      </section>
+
+      <!-- Código QR Personal para Presentar en Caja -->
+      <div class="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center shadow-inner">
+        <div class="bg-white p-2 rounded-xl" id="qrcode-box"></div>
+        <span class="text-[10px] font-tech text-slate-300 tracking-wider font-bold mt-3 uppercase text-center" id="qr-status-text">
+          Presentar en caja para recibir sello
+        </span>
+        <p class="text-[9px] text-slate-500 mt-0.5">El dependiente escaneará tu código desde su terminal</p>
+      </div>
+    </main>
+
+    <!-- Botón para instalar en pantalla de inicio -->
+    <button id="btn-install" class="hidden w-full bg-white hover:bg-slate-200 text-black font-tech font-bold text-xs uppercase tracking-wider py-3.5 rounded-2xl shadow-xl transition-all active:scale-95">
+      Guardar Tarjeta en Teléfono
+    </button>
+
+    <!-- Guía Safari iOS -->
+    <div id="ios-guide" class="hidden w-full bg-white/5 border border-white/10 text-slate-300 p-3.5 rounded-2xl text-center text-xs">
+      <p class="font-bold text-white">¿Guardar tarjeta en tu iPhone?</p>
+      <p class="mt-1 text-[11px] text-slate-400">
+        Toca <span class="text-white font-semibold underline">Compartir</span> abajo y elige <span class="text-white font-semibold underline">Añadir a pantalla de inicio</span>.
+      </p>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 3. VISTA: TERMINAL DE EMPLEADOS / NEGOCIO -->
+  <!-- ========================================== -->
+  <div id="view-staff" class="hidden w-full max-w-sm flex flex-col gap-5 my-auto">
+    <header class="flex items-center justify-between px-1">
+      <div>
+        <span class="text-[10px] font-tech tracking-widest text-cyan-400 uppercase font-semibold block">Terminal Autorizada</span>
+        <h2 class="text-xl font-bold text-white">Lector de Mostrador</h2>
+      </div>
+      <button onclick="exitStaffMode()" class="text-xs font-tech text-slate-400 hover:text-white px-2.5 py-1 border border-white/10 rounded-lg">
+        Salir
+      </button>
+    </header>
+
+    <!-- Escáner de Cámara Integrado -->
+    <div class="titanium-card p-4 rounded-3xl flex flex-col items-center gap-3">
+      <div id="reader" class="w-full rounded-2xl overflow-hidden bg-black aspect-square border border-white/10"></div>
+      <p class="text-[10px] font-tech text-slate-400 text-center uppercase tracking-wider">Apunta la cámara al código QR del cliente</p>
+    </div>
+
+    <!-- Ficha del Cliente Escaneado -->
+    <div id="staff-client-result" class="hidden titanium-card p-5 rounded-3xl flex flex-col gap-4">
+      <div>
+        <span class="text-[9px] font-tech text-slate-500 uppercase tracking-widest block">Cliente Detectado</span>
+        <h3 class="text-lg font-bold text-white" id="staff-name">Nombre</h3>
+        <p class="text-xs text-slate-400 font-mono" id="staff-email">correo@ejemplo.com</p>
+      </div>
+
+      <div class="flex items-center justify-between bg-black/40 p-3 rounded-xl border border-white/5">
+        <span class="text-xs font-tech text-slate-300">Sellos Acumulados</span>
+        <span class="text-lg font-bold text-white font-tech" id="staff-stamps">0 / 6</span>
+      </div>
+
+      <div class="flex gap-2">
+        <button onclick="staffAddStamp()" class="flex-1 bg-white hover:bg-slate-200 text-black font-tech font-bold text-xs uppercase py-3 rounded-xl transition-all active:scale-95 shadow">
+          + Aplicar Sello
+        </button>
+        <button onclick="staffRedeemReward()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-tech font-bold text-xs uppercase px-4 py-3 rounded-xl border border-white/10 transition-all active:scale-95">
+          Canjear
+        </button>
+      </div>
+    </div>
+
+    <!-- Módulo de Notificaciones Promocionales -->
+    <div class="titanium-card p-5 rounded-3xl flex flex-col gap-3">
+      <span class="text-[10px] font-tech text-slate-400 uppercase tracking-widest font-semibold block">Difusión Push</span>
+      <input type="text" id="push-title" placeholder="Título (ej. 2x1 en Barra)" 
+             class="w-full bg-black/50 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none">
+      <textarea id="push-message" placeholder="Mensaje para los clientes del club..." rows="2" 
+                class="w-full bg-black/50 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none"></textarea>
+      <button onclick="sendBroadcastPush()" class="w-full bg-white/10 hover:bg-white/20 text-white font-tech text-xs uppercase py-2.5 rounded-xl border border-white/10 transition-all">
+        Enviar Notificación al Móvil
+      </button>
+    </div>
+  </div>
+
+  <!-- Pie de Navegación Discreta -->
+  <footer class="w-full max-w-sm pt-4 pb-2 flex justify-between items-center text-[10px] font-tech text-slate-600 border-t border-white/5">
+    <span>AURA SYSTEMS // V2.0</span>
+    <button onclick="openStaffAccess()" class="hover:text-slate-400 uppercase tracking-wider transition-colors">
+      Acceso Personal
+    </button>
+  </footer>
+
+  <!-- Lógica Integral de la Plataforma -->
   <script>
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js');
-      });
+      window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
     }
 
-    const TOTAL_STAMPS = 6;
-    let customerId = localStorage.getItem('loyalty_customer_id');
-    if (!customerId) {
-      customerId = 'ARC-' + Math.floor(100000 + Math.random() * 900000);
-      localStorage.setItem('loyalty_customer_id', customerId);
+    const MAX_STAMPS = 6;
+    const STAFF_PIN = "1234";
+    let activeCustomer = null;
+    let html5QrScanner = null;
+
+    // Inicialización de la sesión
+    function initApp() {
+      const stored = localStorage.getItem('aura_customer_session');
+      if (stored) {
+        activeCustomer = JSON.parse(stored);
+        renderClientView();
+      } else {
+        showView('view-onboarding');
+      }
     }
-    document.getElementById('customer-id-tag').innerText = 'UID: ' + customerId;
 
-    let currentStamps = parseInt(localStorage.getItem('loyalty_stamps') || '0');
+    function showView(viewId) {
+      document.getElementById('view-onboarding').classList.add('hidden');
+      document.getElementById('view-client').classList.add('hidden');
+      document.getElementById('view-staff').classList.add('hidden');
+      document.getElementById(viewId).classList.remove('hidden');
+    }
 
-    new QRCode(document.getElementById("qrcode-box"), {
-      text: "https://tarjeta-club.pages.dev/?uid=" + customerId,
-      width: 120,
-      height: 120,
-      colorDark: "#0f172a",
-      colorLight: "#ffffff",
-      correctLevel: QRCode.CorrectLevel.H
-    });
+    // Registro de Cliente
+    function handleCustomerRegister(e) {
+      e.preventDefault();
+      const name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const uid = 'AU-' + Math.floor(100000 + Math.random() * 900000);
 
-    function renderStamps() {
-      const grid = document.getElementById('stamp-grid');
-      const counter = document.getElementById('stamp-counter');
-      const progressBar = document.getElementById('progress-bar');
+      activeCustomer = {
+        uid: uid,
+        name: name,
+        email: email,
+        stamps: 0,
+        registeredAt: new Date().toISOString()
+      };
+
+      saveCustomer(activeCustomer);
+
+      if ("Notification" in window && Notification.permission !== "granted") {
+        Notification.requestPermission();
+      }
+
+      renderClientView();
+    }
+
+    function saveCustomer(customer) {
+      localStorage.setItem('aura_customer_session', JSON.stringify(customer));
+      // Guardar también en el registro global para lectura del negocio
+      localStorage.setItem('aura_db_' + customer.uid, JSON.stringify(customer));
+    }
+
+    // Renderizar Tarjeta del Cliente
+    function renderClientView() {
+      showView('view-client');
+
+      document.getElementById('client-uid').innerText = 'UID: ' + activeCustomer.uid;
+      document.getElementById('client-display-name').innerText = activeCustomer.name;
+      document.getElementById('client-display-email').innerText = activeCustomer.email;
+      document.getElementById('client-counter').innerText = activeCustomer.stamps + ' / ' + MAX_STAMPS + ' SELLOS';
+      document.getElementById('client-progress').style.width = ((activeCustomer.stamps / MAX_STAMPS) * 100) + '%';
+
+      // Dibujar casillas de sellos
+      const grid = document.getElementById('client-grid');
       grid.innerHTML = '';
 
-      counter.innerText = currentStamps + ' / ' + TOTAL_STAMPS + ' SELLOS';
-      progressBar.style.width = ((currentStamps / TOTAL_STAMPS) * 100) + '%';
-
-      for (let i = 1; i <= TOTAL_STAMPS; i++) {
-        const isStamped = i <= currentStamps;
-        const isPrize = i === TOTAL_STAMPS;
+      for (let i = 1; i <= MAX_STAMPS; i++) {
+        const isStamped = i <= activeCustomer.stamps;
+        const isPrize = i === MAX_STAMPS;
         const box = document.createElement('div');
-        box.onclick = () => toggleStamp(i);
 
-        box.className = `h-20 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 cursor-pointer select-none relative ${
-          isStamped 
-            ? 'stamp-active scale-[1.02]' 
-            : isPrize 
-              ? 'stamp-prize' 
-              : 'stamp-empty hover:bg-white/30'
+        box.className = `h-20 rounded-2xl flex flex-col items-center justify-center transition-all ${
+          isStamped ? 'stamp-filled' : isPrize ? 'stamp-empty border-white/30' : 'stamp-empty'
         }`;
 
         if (isStamped) {
           box.innerHTML = `
-            <span class="text-xl filter drop-shadow font-black text-slate-950 font-mono-tech">✓</span>
-            <span class="text-[9px] font-black text-slate-950 font-mono-tech tracking-widest mt-1">SELLADO</span>
+            <svg class="w-6 h-6 text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.7)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span class="text-[8px] font-tech text-slate-300 uppercase tracking-widest mt-1">CONFIRMADO</span>
           `;
         } else if (isPrize) {
           box.innerHTML = `
-            <span class="text-xl opacity-70">✦</span>
-            <span class="text-[9px] font-bold text-slate-700 font-mono-tech tracking-widest mt-1">REGLO</span>
+            <span class="text-sm font-tech font-bold text-slate-400">✦</span>
+            <span class="text-[8px] font-tech text-slate-500 uppercase tracking-widest mt-1">PREMIO</span>
           `;
         } else {
-          box.innerHTML = `
-            <span class="text-sm font-mono-tech font-bold text-slate-400">${i}</span>
-          `;
+          box.innerHTML = `<span class="text-sm font-tech font-bold text-slate-600">${i}</span>`;
         }
         grid.appendChild(box);
       }
 
-      const qrLabel = document.getElementById('qr-label');
-      if (currentStamps === TOTAL_STAMPS) {
-        qrLabel.innerHTML = '<span class="text-emerald-600 font-bold">¡PREMIO DESBLOQUEADO! RECLAMA AQUÍ</span>';
+      // Renderizar Código QR
+      const qrContainer = document.getElementById('qrcode-box');
+      qrContainer.innerHTML = '';
+      new QRCode(qrContainer, {
+        text: activeCustomer.uid,
+        width: 125,
+        height: 125,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+
+      const qrStatus = document.getElementById('qr-status-text');
+      if (activeCustomer.stamps >= MAX_STAMPS) {
+        qrStatus.innerHTML = '<span class="text-white font-extrabold">¡RECOMPENSA LISTA PARA CANJE!</span>';
       } else {
-        qrLabel.innerText = 'ESCANEAR EN MOSTRADOR';
+        qrStatus.innerText = 'PRESENTAR EN CAJA PARA RECIBIR SELLO';
       }
     }
 
-    function addStamp() {
-      if (currentStamps < TOTAL_STAMPS) {
-        currentStamps++;
-        localStorage.setItem('loyalty_stamps', currentStamps);
-        if (navigator.vibrate) navigator.vibrate(50);
-        renderStamps();
+    // Terminal de Empleados
+    function openStaffAccess() {
+      const pin = prompt("Introduce el PIN de acceso del personal:");
+      if (pin === STAFF_PIN) {
+        showView('view-staff');
+        startScanner();
+      } else if (pin !== null) {
+        alert("PIN incorrecto");
       }
     }
 
-    function toggleStamp(index) {
-      if (index === currentStamps + 1) {
-        addStamp();
-      } else if (index === currentStamps) {
-        currentStamps--;
-        localStorage.setItem('loyalty_stamps', currentStamps);
-        if (navigator.vibrate) navigator.vibrate(30);
-        renderStamps();
+    function exitStaffMode() {
+      if (html5QrScanner) {
+        html5QrScanner.clear();
+      }
+      initApp();
+    }
+
+    function startScanner() {
+      html5QrScanner = new Html5QrcodeScanner("reader", { 
+        fps: 10, 
+        qrbox: { width: 220, height: 220 } 
+      });
+      html5QrScanner.render(onScanSuccess);
+    }
+
+    let scannedClient = null;
+
+    function onScanSuccess(decodedText) {
+      const stored = localStorage.getItem('aura_db_' + decodedText);
+      if (stored) {
+        scannedClient = JSON.parse(stored);
+        document.getElementById('staff-client-result').classList.remove('hidden');
+        document.getElementById('staff-name').innerText = scannedClient.name;
+        document.getElementById('staff-email').innerText = scannedClient.email;
+        document.getElementById('staff-stamps').innerText = scannedClient.stamps + ' / ' + MAX_STAMPS;
+        if (navigator.vibrate) navigator.vibrate(60);
+      } else {
+        alert("Código no reconocido en la base de clientes: " + decodedText);
       }
     }
 
-    function resetStamps() {
-      currentStamps = 0;
-      localStorage.setItem('loyalty_stamps', '0');
-      if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
-      renderStamps();
+    function staffAddStamp() {
+      if (!scannedClient) return;
+      if (scannedClient.stamps < MAX_STAMPS) {
+        scannedClient.stamps++;
+        localStorage.setItem('aura_db_' + scannedClient.uid, JSON.stringify(scannedClient));
+        
+        // Si el empleado está probando en el mismo navegador, actualiza la sesión
+        if (activeCustomer && activeCustomer.uid === scannedClient.uid) {
+          saveCustomer(scannedClient);
+        }
+
+        document.getElementById('staff-stamps').innerText = scannedClient.stamps + ' / ' + MAX_STAMPS;
+        alert("Sello aplicado correctamente a " + scannedClient.name);
+      } else {
+        alert("La tarjeta ya completó todos sus sellos. Procede a canjear.");
+      }
     }
 
-    let deferredPrompt;
-    const installButton = document.getElementById('btn-install');
+    function staffRedeemReward() {
+      if (!scannedClient) return;
+      if (scannedClient.stamps >= MAX_STAMPS) {
+        scannedClient.stamps = 0;
+        localStorage.setItem('aura_db_' + scannedClient.uid, JSON.stringify(scannedClient));
+        
+        if (activeCustomer && activeCustomer.uid === scannedClient.uid) {
+          saveCustomer(scannedClient);
+        }
+
+        document.getElementById('staff-stamps').innerText = '0 / ' + MAX_STAMPS;
+        alert("Premio canjeado con éxito. Se reinició la tarjeta.");
+      } else {
+        alert("El cliente no tiene los sellos suficientes para canjear.");
+      }
+    }
+
+    // Emisión de Notificación Push
+    function sendBroadcastPush() {
+      const title = document.getElementById('push-title').value.trim();
+      const body = document.getElementById('push-message').value.trim();
+
+      if (!title || !body) {
+        alert("Por favor completa el título y el mensaje");
+        return;
+      }
+
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(title, {
+          body: body,
+          icon: "/icon-192.png"
+        });
+        alert("Notificación enviada al dispositivo.");
+      } else {
+        alert("El navegador no tiene permisos de notificación activos todavía.");
+      }
+    }
+
+    // Detección de Instalación PWA
+    let installEvent = null;
+    const btnInstall = document.getElementById('btn-install');
     const iosBanner = document.getElementById('ios-guide');
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
-      deferredPrompt = e;
-      installButton.classList.remove('hidden');
+      installEvent = e;
+      btnInstall.classList.remove('hidden');
     });
 
-    installButton.addEventListener('click', async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          installButton.classList.add('hidden');
-        }
-        deferredPrompt = null;
+    btnInstall.addEventListener('click', async () => {
+      if (installEvent) {
+        installEvent.prompt();
+        const res = await installEvent.userChoice;
+        if (res.outcome === 'accepted') btnInstall.classList.add('hidden');
+        installEvent = null;
       }
     });
 
-    const isIos = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+    const isApple = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
     const isStandalone = () => ('standalone' in window.navigator) && (window.navigator.standalone);
 
-    if (isIos() && !isStandalone()) {
+    if (isApple() && !isStandalone()) {
       iosBanner.classList.remove('hidden');
     }
 
-    renderStamps();
+    // Iniciar app al cargar
+    initApp();
   </script>
 </body>
 </html>
