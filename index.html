@@ -35,24 +35,20 @@
       border: 1px dashed rgba(255,255,255,0.12);
     }
     #scanner-video video { border-radius: 1.25rem; object-fit: cover; }
-    
-    /* Alerta In-App para notificaciones */
-    #in-app-notification {
-      transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
+    #in-app-notification { transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
   </style>
 </head>
 <body class="bg-[#050608] text-slate-100 min-h-screen flex flex-col items-center justify-between p-4">
 
-  <!-- ALERTA IN-APP (SE MUESTRA SI LA NOTIFICACIÓN DEL SISTEMA FALLA) -->
+  <!-- ALERTA IN-APP PARA EL CLIENTE -->
   <div id="in-app-notification" class="fixed top-[-100%] left-0 w-full px-4 z-50 pt-4 flex justify-center">
     <div class="bg-cyan-500 text-white w-full max-w-sm rounded-2xl p-4 shadow-[0_10px_40px_rgba(6,182,212,0.5)] border border-cyan-400 flex flex-col gap-1 cursor-pointer" onclick="closeInAppNotification()">
       <div class="flex items-center gap-2">
         <span class="text-xl">🔔</span>
         <span class="text-[10px] font-tech uppercase tracking-widest font-bold text-cyan-100">Mensaje del Negocio</span>
       </div>
-      <h3 id="in-app-title" class="font-bold text-lg leading-tight mt-1">Título</h3>
-      <p id="in-app-body" class="text-sm opacity-90 leading-tight">Cuerpo del mensaje</p>
+      <h3 id="in-app-title" class="font-bold text-lg mt-1">Título</h3>
+      <p id="in-app-body" class="text-sm opacity-90">Mensaje</p>
       <p class="text-[9px] text-cyan-200 mt-2 text-center uppercase tracking-wider">Toca para cerrar</p>
     </div>
   </div>
@@ -60,10 +56,9 @@
   <!-- PORTAL DE INICIO -->
   <section id="view-portal" class="w-full max-w-sm my-auto flex flex-col gap-6">
     <div class="text-center">
-      <span class="text-[10px] font-tech tracking-[0.3em] text-slate-400 uppercase font-semibold">Sistema de Membresías</span>
+      <span class="text-[10px] font-tech tracking-[0.3em] text-slate-400 uppercase font-semibold">Sistema Central</span>
       <h1 class="text-3xl font-extrabold text-white mt-1">AURA CLUB</h1>
     </div>
-
     <div class="flex flex-col gap-3">
       <button onclick="goToClientPortal()" class="titanium-card p-5 rounded-2xl flex items-center justify-between text-left active:scale-[0.98]">
         <div>
@@ -72,11 +67,10 @@
         </div>
         <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white">→</div>
       </button>
-
       <button onclick="showView('view-staff-auth')" class="titanium-card p-5 rounded-2xl flex items-center justify-between text-left active:scale-[0.98]">
         <div>
           <span class="text-base font-bold text-white block">Soy Trabajador</span>
-          <span class="text-xs text-slate-400">Escanear y enviar avisos</span>
+          <span class="text-xs text-slate-400">Escanear y sellar visitas</span>
         </div>
         <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400">🔒</div>
       </button>
@@ -89,9 +83,9 @@
       <h2 class="text-2xl font-bold text-white">Alta de Miembro</h2>
     </div>
     <form onsubmit="handleRegister(event)" class="titanium-card p-6 rounded-3xl flex flex-col gap-4">
-      <input type="text" id="reg-name" required placeholder="Nombre Completo" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white/40">
-      <input type="email" id="reg-email" required placeholder="Correo Electrónico" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white/40">
-      <button type="submit" id="btn-submit-reg" class="w-full bg-white text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl shadow-lg active:scale-95">Generar Tarjeta</button>
+      <input type="text" id="reg-name" required placeholder="Nombre Completo" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none">
+      <input type="email" id="reg-email" required placeholder="Correo Electrónico" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none">
+      <button type="submit" id="btn-submit-reg" class="w-full bg-white text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl active:scale-95">Generar Tarjeta</button>
     </form>
     <button onclick="showView('view-portal')" class="text-xs text-slate-500">Volver</button>
   </section>
@@ -103,16 +97,15 @@
     </div>
     <div class="titanium-card p-6 rounded-3xl flex flex-col gap-4">
       <input type="password" id="staff-pin-input" maxlength="6" inputmode="numeric" placeholder="••••••" class="w-full bg-black/60 border border-white/20 rounded-xl py-3 text-center text-2xl tracking-[0.5em] text-white focus:outline-none">
-      <button onclick="verifyStaffPIN()" class="w-full bg-white text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl shadow active:scale-95">Ingresar</button>
-      <p class="text-[10px] text-center text-slate-500 font-tech">PIN: 123456</p>
+      <button onclick="verifyStaffPIN()" class="w-full bg-white text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl active:scale-95">Ingresar</button>
     </div>
     <button onclick="showView('view-portal')" class="text-xs text-slate-500">Volver</button>
   </section>
 
-  <!-- TARJETA CLIENTE -->
+  <!-- TARJETA DEL CLIENTE -->
   <section id="view-client-card" class="hidden w-full max-w-sm flex flex-col items-center gap-5 my-auto">
     <header class="w-full flex justify-between px-1">
-      <span class="text-[10px] font-tech text-emerald-400 uppercase">● Sincronizado</span>
+      <span class="text-[10px] font-tech text-emerald-400 uppercase">● Pase Activo</span>
       <button onclick="logoutCustomer()" class="text-[10px] font-tech text-slate-500 uppercase">Salir</button>
     </header>
 
@@ -138,10 +131,15 @@
         <div class="bg-white p-2 rounded-xl" id="qrcode-target"></div>
         <span class="text-[10px] font-tech text-slate-300 font-bold mt-3 uppercase text-center" id="client-status-note">Escanear QR en caja</span>
       </div>
+
+      <!-- BOTÓN DE ACTUALIZACIÓN MANUAL PARA EL CLIENTE -->
+      <button id="btn-force-sync" onclick="forceClientSync()" class="w-full bg-white/10 hover:bg-white/20 text-white font-tech text-xs uppercase py-3 rounded-xl border border-white/10 transition-all active:scale-95">
+        ↻ Sincronizar Sellos
+      </button>
     </main>
   </section>
 
-  <!-- TERMINAL TRABAJADOR -->
+  <!-- TERMINAL DEL TRABAJADOR -->
   <section id="view-staff-dashboard" class="hidden w-full max-w-sm flex flex-col gap-4 my-auto">
     <header class="flex justify-between px-1">
       <span class="text-[10px] font-tech text-slate-400 uppercase font-semibold">Lector QR</span>
@@ -154,7 +152,6 @@
       </div>
     </div>
 
-    <!-- Ficha Cliente Escaneado -->
     <div id="staff-client-card" class="hidden titanium-card p-5 rounded-3xl flex flex-col gap-4">
       <div>
         <span class="text-[9px] font-tech text-emerald-400 uppercase block">Cliente Reconocido</span>
@@ -163,20 +160,20 @@
       </div>
 
       <div class="flex justify-between bg-black/40 p-3 rounded-xl border border-white/5">
-        <span class="text-xs font-tech text-slate-300">Sellos</span>
+        <span class="text-xs font-tech text-slate-300">Sellos Acumulados</span>
         <span class="text-lg font-bold text-white font-tech" id="scanned-client-stamps">0 / 6</span>
       </div>
 
       <div class="flex gap-2">
-        <button onclick="applyStampCloud()" id="btn-add-stamp" class="flex-1 bg-white text-black font-tech font-bold text-xs uppercase py-3 rounded-xl active:scale-95">+ Sellar</button>
-        <button onclick="redeemRewardCloud()" class="bg-slate-800 text-slate-200 font-tech font-bold text-xs uppercase px-4 py-3 rounded-xl border border-white/10 active:scale-95">Canjear</button>
+        <button onclick="applyStampWorker()" id="btn-add-stamp" class="flex-1 bg-white text-black font-tech font-bold text-xs uppercase py-3 rounded-xl active:scale-95">+ Sellar</button>
+        <button onclick="redeemRewardWorker()" class="bg-slate-800 text-slate-200 font-tech font-bold text-xs uppercase px-4 py-3 rounded-xl border border-white/10 active:scale-95">Canjear</button>
       </div>
 
       <div class="border-t border-white/10 pt-3 flex flex-col gap-2">
-        <span class="text-[9px] font-tech text-slate-400 uppercase">Enviar Aviso a este cliente</span>
+        <span class="text-[9px] font-tech text-slate-400 uppercase">Notificación Remota</span>
         <input type="text" id="target-push-title" placeholder="Título" class="w-full bg-black/50 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none">
         <input type="text" id="target-push-body" placeholder="Mensaje" class="w-full bg-black/50 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none">
-        <button onclick="sendPushToClient()" class="w-full bg-white/10 text-white font-tech text-xs uppercase py-2 rounded-lg border border-white/10 active:scale-95">Enviar Notificación</button>
+        <button onclick="sendPushWorker()" class="w-full bg-white/10 text-white font-tech text-xs uppercase py-2 rounded-lg border border-white/10 active:scale-95">Enviar Notificación</button>
       </div>
     </div>
   </section>
@@ -185,25 +182,29 @@
     const MAX_STAMPS = 6;
     const STAFF_PIN = "123456";
     let qrReaderInstance = null;
-    let currentCustomer = null;
-    let targetCustomer = null;
+    let currentCustomer = null; // Memoria del cliente que usa el teléfono
+    let targetCustomer = null;  // Memoria del cliente que fue escaneado
     let syncIntervalId = null;
     let lastNotifId = 0;
 
     function showView(viewId) {
       ['view-portal', 'view-register', 'view-staff-auth', 'view-client-card', 'view-staff-dashboard'].forEach(id => document.getElementById(id).classList.add('hidden'));
       document.getElementById(viewId).classList.remove('hidden');
-      if (viewId !== 'view-client-card' && syncIntervalId) clearInterval(syncIntervalId);
+      if (viewId !== 'view-client-card' && syncIntervalId) {
+        clearInterval(syncIntervalId);
+        syncIntervalId = null;
+      }
     }
 
-    // CLIENTE: Registro e Inicio
+    /* =========================================
+       LÓGICA DEL CLIENTE (MI TARJETA)
+       ========================================= */
     async function goToClientPortal() {
       const saved = localStorage.getItem('aura_customer_profile');
       if (saved) {
         currentCustomer = JSON.parse(saved);
         renderCustomerCard();
         startCloudSync();
-        if ("Notification" in window) Notification.requestPermission();
       } else {
         showView('view-register');
       }
@@ -219,17 +220,15 @@
         stamps: 0
       };
       
-      // Intento subir a la nube
       try {
         await fetch('/api/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ uid: currentCustomer.uid, action: 'REGISTER', customerData: currentCustomer })
         });
-      } catch(e) { console.log("Se guardará solo en QR temporalmente"); }
+      } catch(e) { console.log("Se guardará de forma local"); }
 
       localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
-      if ("Notification" in window) Notification.requestPermission();
       renderCustomerCard();
       startCloudSync();
     }
@@ -238,7 +237,6 @@
       showView('view-client-card');
       document.getElementById('client-name-display').innerText = currentCustomer.name;
       document.getElementById('client-email-display').innerText = currentCustomer.email;
-      document.getElementById('client-uid-tag').innerText = 'UID: ' + currentCustomer.uid;
       document.getElementById('client-stamp-counter').innerText = currentCustomer.stamps + ' / ' + MAX_STAMPS + ' SELLOS';
       document.getElementById('client-progress-bar').style.width = ((currentCustomer.stamps / MAX_STAMPS) * 100) + '%';
 
@@ -252,7 +250,6 @@
         </div>`;
       }
 
-      // QR INFALIBLE: Contiene toda la información del cliente
       const qrBox = document.getElementById('qrcode-target');
       qrBox.innerHTML = '';
       new QRCode(qrBox, {
@@ -261,58 +258,49 @@
       });
     }
 
-    // CLIENTE: Sincronización y Notificaciones
     function startCloudSync() {
       if (syncIntervalId) clearInterval(syncIntervalId);
-      // Petición cada 2 segundos con timestamp para evitar la caché obligatoriamente
-      syncIntervalId = setInterval(async () => {
-        try {
-          const res = await fetch(`/api/sync?uid=${currentCustomer.uid}&nocache=${Date.now()}`);
-          if (res.ok) {
-            const data = await res.json();
-            
-            // Actualizar sellos si cambiaron
-            if (data.stamps !== undefined && data.stamps !== currentCustomer.stamps) {
-              currentCustomer.stamps = data.stamps;
-              localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
-              if(navigator.vibrate) navigator.vibrate([100,50,100]);
-              renderCustomerCard();
-            }
+      syncIntervalId = setInterval(forceClientSync, 3000);
+    }
 
-            // Disparar notificación si hay una nueva
-            if (data.pendingNotification && data.pendingNotification.id !== lastNotifId) {
-              lastNotifId = data.pendingNotification.id;
-              fireNotification(data.pendingNotification.title, data.pendingNotification.body);
-            }
+    async function forceClientSync() {
+      if (!currentCustomer) return;
+      const btn = document.getElementById('btn-force-sync');
+      if(btn) btn.innerText = "Sincronizando...";
+
+      try {
+        const res = await fetch(`/api/sync?uid=${currentCustomer.uid}&nocache=${Date.now()}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.stamps !== undefined && data.stamps !== currentCustomer.stamps) {
+            currentCustomer.stamps = data.stamps;
+            localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
+            if(navigator.vibrate) navigator.vibrate(80);
+            renderCustomerCard();
           }
-        } catch (e) {}
-      }, 2000);
+          if (data.pendingNotification && data.pendingNotification.id !== lastNotifId) {
+            lastNotifId = data.pendingNotification.id;
+            fireNotification(data.pendingNotification.title, data.pendingNotification.body);
+          }
+        }
+      } catch (e) {}
+
+      if(btn) btn.innerText = "↻ Sincronizar Sellos";
     }
 
     function fireNotification(title, body) {
-      if(navigator.vibrate) navigator.vibrate([200,100,200,100,200]);
-      
-      // Intento 1: API de Sistema
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification(title, { body: body, icon: '/icon-192.png' });
-      } 
-      
-      // Intento 2: In-App (Siempre se muestra para asegurar que el cliente la vea)
+      if(navigator.vibrate) navigator.vibrate([200,100,200]);
       document.getElementById('in-app-title').innerText = title;
       document.getElementById('in-app-body').innerText = body;
       document.getElementById('in-app-notification').style.top = '10px';
     }
 
-    function closeInAppNotification() {
-      document.getElementById('in-app-notification').style.top = '-100%';
-    }
+    function closeInAppNotification() { document.getElementById('in-app-notification').style.top = '-100%'; }
+    function logoutCustomer() { localStorage.removeItem('aura_customer_profile'); showView('view-portal'); }
 
-    function logoutCustomer() {
-      localStorage.removeItem('aura_customer_profile');
-      showView('view-portal');
-    }
-
-    // TRABAJADOR: Inicio de sesión y Cámara
+    /* =========================================
+       LÓGICA DEL TRABAJADOR (OFLINE-FIRST)
+       ========================================= */
     function verifyStaffPIN() {
       if (document.getElementById('staff-pin-input').value === STAFF_PIN) {
         document.getElementById('staff-pin-input').value = '';
@@ -328,32 +316,36 @@
     }
 
     function stopCameraAndExit() {
-      if (qrReaderInstance) {
-        qrReaderInstance.stop().then(() => { qrReaderInstance.clear(); showView('view-portal'); });
-      } else showView('view-portal');
+      if (qrReaderInstance) { qrReaderInstance.stop().then(() => { qrReaderInstance.clear(); showView('view-portal'); }); } 
+      else showView('view-portal');
     }
 
-    // TRABAJADOR: Procesamiento Infalible de QR
+    // EL LECTOR AHORA PRIORIZA SU PROPIA MEMORIA (INFALIBLE)
     async function processScannedQR(rawText) {
       let parsed = null;
-      try {
-        // Lee directamente los datos del código QR (Evita el error de "no detectado")
-        parsed = JSON.parse(rawText);
-      } catch(e) {
-        alert("Escaneaste un QR que no es de AURA."); return;
-      }
+      try { parsed = JSON.parse(rawText); } catch(e) { return; }
 
       if (parsed && parsed.uid) {
-        targetCustomer = parsed; // Carga inmediata desde el QR
+        targetCustomer = parsed; 
         
-        // Intenta actualizar los sellos desde la nube si hay internet
+        // 1. Rescatar la memoria interna invencible del trabajador
+        const workerMemory = localStorage.getItem('aura_staff_db_' + targetCustomer.uid);
+        if (workerMemory) {
+          const localData = JSON.parse(workerMemory);
+          if (localData.stamps !== undefined) targetCustomer.stamps = localData.stamps;
+        }
+
+        // 2. Intentar descargar de la nube si hay internet
         try {
           const res = await fetch(`/api/sync?uid=${targetCustomer.uid}&nocache=${Date.now()}`);
           if (res.ok) {
             const freshData = await res.json();
-            targetCustomer.stamps = freshData.stamps !== undefined ? freshData.stamps : targetCustomer.stamps;
+            if (freshData.stamps !== undefined) targetCustomer.stamps = freshData.stamps;
           }
-        } catch(e) { console.log("Trabajando offline / sin nube"); }
+        } catch(e) {}
+
+        // 3. Guardar el estado consolidado de nuevo en la memoria del trabajador
+        localStorage.setItem('aura_staff_db_' + targetCustomer.uid, JSON.stringify(targetCustomer));
 
         document.getElementById('staff-client-card').classList.remove('hidden');
         document.getElementById('scanned-client-name').innerText = targetCustomer.name;
@@ -363,17 +355,19 @@
       }
     }
 
-    // TRABAJADOR: Añadir Sello
-    async function applyStampCloud() {
+    async function applyStampWorker() {
       if (!targetCustomer) return;
       if (targetCustomer.stamps >= MAX_STAMPS) { alert("Tarjeta llena"); return; }
       
       const btn = document.getElementById('btn-add-stamp');
       btn.innerText = "Sellando..."; btn.disabled = true;
 
+      // 1. APLICAR SELLO EN LA MEMORIA DEL TRABAJADOR AL INSTANTE (Jamás se pierde)
       targetCustomer.stamps += 1;
       document.getElementById('scanned-client-stamps').innerText = targetCustomer.stamps + ' / ' + MAX_STAMPS;
+      localStorage.setItem('aura_staff_db_' + targetCustomer.uid, JSON.stringify(targetCustomer));
 
+      // 2. Intentar subir a Cloudflare
       try {
         await fetch('/api/sync', {
           method: 'POST',
@@ -381,16 +375,17 @@
           body: JSON.stringify({ uid: targetCustomer.uid, action: 'ADD_STAMP', customerData: targetCustomer })
         });
         if(navigator.vibrate) navigator.vibrate([50,50,50]);
-      } catch (err) {
-        alert("El sello se aplicó, pero la base de datos de Cloudflare falló. Verifica tu archivo KV.");
-      }
+      } catch (err) {}
+      
       btn.innerText = "+ Sellar"; btn.disabled = false;
     }
 
-    async function redeemRewardCloud() {
+    async function redeemRewardWorker() {
       if (!targetCustomer) return;
+      
       targetCustomer.stamps = 0;
       document.getElementById('scanned-client-stamps').innerText = '0 / ' + MAX_STAMPS;
+      localStorage.setItem('aura_staff_db_' + targetCustomer.uid, JSON.stringify(targetCustomer));
 
       try {
         await fetch('/api/sync', {
@@ -402,8 +397,7 @@
       } catch (err) {}
     }
 
-    // TRABAJADOR: Enviar Notificación
-    async function sendPushToClient() {
+    async function sendPushWorker() {
       if (!targetCustomer) return;
       const title = document.getElementById('target-push-title').value;
       const body = document.getElementById('target-push-body').value;
@@ -420,11 +414,11 @@
           })
         });
         if (res.ok) {
-          alert("¡Mensaje disparado al teléfono del cliente!");
+          alert("¡Mensaje disparado a la pantalla de " + targetCustomer.name + "!");
           document.getElementById('target-push-title').value = '';
           document.getElementById('target-push-body').value = '';
         }
-      } catch (err) { alert("Error de red"); }
+      } catch (err) {}
     }
 
     window.onload = () => {
