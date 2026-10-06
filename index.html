@@ -13,7 +13,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
 
-  <!-- MOTOR DE ONESIGNAL CORREGIDO (V16) -->
+  <!-- MOTOR DE ONESIGNAL -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -215,7 +215,6 @@
         currentCustomer = JSON.parse(saved);
         renderCustomerCard();
         startCloudSync();
-        forceNotificationPrompt(); // Intenta registrar al instante
       } else {
         showView('view-register');
       }
@@ -239,16 +238,11 @@
           currentCustomer.name = name; 
         } else {
           currentCustomer = { uid: secureUid, name: name, phone: rawPhone, stamps: 0 };
-          await fetch('/api/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ uid: secureUid, action: 'REGISTER', customerData: currentCustomer })
-          });
+          await fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uid: secureUid, action: 'REGISTER', customerData: currentCustomer }) });
         }
         localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
         renderCustomerCard();
         startCloudSync();
-        forceNotificationPrompt(); // Conecta con OneSignal
       } catch(e) { alert("Fallo de red."); } 
       finally { btn.innerText = "Ingresar al Club"; btn.disabled = false; }
     }
@@ -274,13 +268,32 @@
       new QRCode(document.getElementById('qrcode-target'), { text: qrPayload, width: 150, height: 150, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.L });
     }
 
-    // EL CÓDIGO CORREGIDO PARA ONESIGNAL
+    // RADAR DE DIAGNÓSTICO (ESTO NOS DIRÁ EL ERROR EXACTO)
     function forceNotificationPrompt() {
+      alert("1. Iniciando análisis de conexión OneSignal...");
+      
+      if (!("Notification" in window)) {
+        alert("Error: Tu navegador no soporta notificaciones. Si estás en iPhone Safari, tienes que darle a 'Compartir' -> 'Añadir a la pantalla de inicio'.");
+        return;
+      }
+      
       window.OneSignalDeferred.push(async function(OneSignal) {
-        // 1. Identifica al cliente en la base de datos de OneSignal
-        if (currentCustomer) await OneSignal.login(currentCustomer.uid);
-        // 2. Le pide a OneSignal (y no al navegador) que active el permiso y guarde la conexión
-        await OneSignal.Notifications.requestPermission();
+        try {
+          alert("2. Estado del permiso en tu navegador: " + Notification.permission);
+          
+          if (currentCustomer) {
+            await OneSignal.login(currentCustomer.uid);
+            alert("3. Usuario enlazado internamente: " + currentCustomer.uid);
+          }
+          
+          await OneSignal.Notifications.requestPermission();
+          
+          const isSubscribed = OneSignal.User.PushSubscription.optedIn;
+          alert("4. Conexión final: " + (isSubscribed ? "ÉXITO (Suscrito)" : "FALLÓ (No suscrito en base de datos)"));
+          
+        } catch (error) {
+          alert("ERROR CRÍTICO: " + error.message);
+        }
       });
     }
 
@@ -307,7 +320,6 @@
     
     function logoutCustomer() { 
       localStorage.removeItem('aura_customer_profile'); 
-      window.OneSignalDeferred.push(function(OneSignal) { OneSignal.logout(); });
       showView('view-portal'); 
     }
 
