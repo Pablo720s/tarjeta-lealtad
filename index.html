@@ -17,8 +17,8 @@
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function(OneSignal) {
-      await OneSignal.init({
+    OneSignalDeferred.push(function(OneSignal) {
+      OneSignal.init({
         appId: "d58ea2fb-a340-4669-9e14-f8baaf7cba74"
       });
     });
@@ -39,6 +39,7 @@
 </head>
 <body class="bg-[#050608] text-slate-100 min-h-screen flex flex-col items-center justify-between p-4">
 
+  <!-- VISTAS DE INICIO Y REGISTRO -->
   <section id="view-portal" class="w-full max-w-sm my-auto flex flex-col gap-6">
     <div class="text-center">
       <span class="text-[10px] font-tech tracking-[0.3em] text-slate-400 uppercase font-semibold">Sistema Central</span>
@@ -75,6 +76,7 @@
     <button onclick="showView('view-portal')" class="text-xs text-slate-500">Volver</button>
   </section>
 
+  <!-- TARJETA DEL CLIENTE -->
   <section id="view-client-card" class="hidden w-full max-w-sm flex flex-col items-center gap-5 my-auto">
     <header class="w-full flex justify-between px-1">
       <div class="flex items-center gap-2">
@@ -209,12 +211,42 @@
       if (viewId !== 'view-client-card' && syncIntervalId) clearInterval(syncIntervalId);
     }
 
+    // CONEXIÓN MAESTRA A ONESIGNAL
+    function connectToOneSignal() {
+      window.OneSignalDeferred.push(function(OneSignal) {
+        if (currentCustomer) OneSignal.login(currentCustomer.uid);
+        OneSignal.User.PushSubscription.optIn();
+      });
+    }
+
+    // PEDIR PERMISO NATIVO LIMPIO
+    function forceNotificationPrompt() {
+      if (!("Notification" in window)) {
+        alert("Tu navegador no soporta notificaciones nativas.");
+        return;
+      }
+      
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          connectToOneSignal();
+          alert("¡Suscripción confirmada en la Nube!");
+        } else {
+          alert("Permiso Denegado. Actívalo en el candado de la barra de arriba.");
+        }
+      });
+    }
+
     async function goToClientPortal() {
       const saved = localStorage.getItem('aura_customer_profile');
       if (saved) {
         currentCustomer = JSON.parse(saved);
         renderCustomerCard();
         startCloudSync();
+        
+        // Si ya hay permiso, conecta silenciosamente
+        if ("Notification" in window && Notification.permission === "granted") {
+           connectToOneSignal();
+        }
       } else {
         showView('view-register');
       }
@@ -243,6 +275,14 @@
         localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
         renderCustomerCard();
         startCloudSync();
+        
+        // Pide permisos nativos limpios al registrarse
+        if ("Notification" in window && Notification.permission === "default") {
+          forceNotificationPrompt();
+        } else if (Notification.permission === "granted") {
+          connectToOneSignal();
+        }
+
       } catch(e) { alert("Fallo de red."); } 
       finally { btn.innerText = "Ingresar al Club"; btn.disabled = false; }
     }
@@ -268,35 +308,6 @@
       new QRCode(document.getElementById('qrcode-target'), { text: qrPayload, width: 150, height: 150, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.L });
     }
 
-    // RADAR DE DIAGNÓSTICO (ESTO NOS DIRÁ EL ERROR EXACTO)
-    function forceNotificationPrompt() {
-      alert("1. Iniciando análisis de conexión OneSignal...");
-      
-      if (!("Notification" in window)) {
-        alert("Error: Tu navegador no soporta notificaciones. Si estás en iPhone Safari, tienes que darle a 'Compartir' -> 'Añadir a la pantalla de inicio'.");
-        return;
-      }
-      
-      window.OneSignalDeferred.push(async function(OneSignal) {
-        try {
-          alert("2. Estado del permiso en tu navegador: " + Notification.permission);
-          
-          if (currentCustomer) {
-            await OneSignal.login(currentCustomer.uid);
-            alert("3. Usuario enlazado internamente: " + currentCustomer.uid);
-          }
-          
-          await OneSignal.Notifications.requestPermission();
-          
-          const isSubscribed = OneSignal.User.PushSubscription.optedIn;
-          alert("4. Conexión final: " + (isSubscribed ? "ÉXITO (Suscrito)" : "FALLÓ (No suscrito en base de datos)"));
-          
-        } catch (error) {
-          alert("ERROR CRÍTICO: " + error.message);
-        }
-      });
-    }
-
     function startCloudSync() {
       if (syncIntervalId) clearInterval(syncIntervalId);
       syncIntervalId = setInterval(async () => {
@@ -320,6 +331,7 @@
     
     function logoutCustomer() { 
       localStorage.removeItem('aura_customer_profile'); 
+      window.OneSignalDeferred.push(function(OneSignal) { OneSignal.logout(); });
       showView('view-portal'); 
     }
 
