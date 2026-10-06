@@ -13,7 +13,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
 
-  <!-- MOTOR DE ONESIGNAL CORREGIDO Y ESTABLE -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -38,7 +37,6 @@
 </head>
 <body class="bg-[#050608] text-slate-100 min-h-screen flex flex-col items-center justify-between p-4">
 
-  <!-- ALERTA IN-APP DE RESPALDO INFALIBLE -->
   <div id="in-app-notification" class="fixed top-[-100%] left-0 w-full px-4 z-50 pt-4 flex justify-center">
     <div class="bg-cyan-500 text-white w-full max-w-sm rounded-2xl p-4 shadow-[0_10px_40px_rgba(6,182,212,0.5)] border border-cyan-400 flex flex-col gap-1 cursor-pointer" onclick="closeInAppNotification()">
       <div class="flex items-center gap-2">
@@ -123,7 +121,6 @@
     </main>
   </section>
 
-  <!-- MÓDULOS DEL TRABAJADOR -->
   <section id="view-staff-menu" class="hidden w-full max-w-sm my-auto flex flex-col gap-4">
     <header class="flex justify-between px-1 mb-2">
       <span class="text-[10px] font-tech text-emerald-400 uppercase font-semibold">Terminal Activa</span>
@@ -241,11 +238,22 @@
     }
 
     function activatePush() {
-      window.OneSignalDeferred.push(function(OneSignal) {
-        if (currentCustomer) {
-          OneSignal.login(currentCustomer.uid);
+      if (!("Notification" in window)) {
+        alert("Este dispositivo no soporta alertas nativas.");
+        return;
+      }
+      
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          alert("¡Alertas activadas correctamente en tu dispositivo!");
+          try {
+            window.OneSignalDeferred.push(function(OneSignal) {
+              if (currentCustomer) OneSignal.login(currentCustomer.uid);
+            });
+          } catch(e) {}
+        } else {
+          alert("Permiso denegado por el navegador. Toca el candado en la barra superior para permitir las notificaciones manualmente.");
         }
-        OneSignal.Slidedown.promptPush();
       });
     }
 
@@ -255,7 +263,6 @@
         currentCustomer = JSON.parse(saved);
         renderCustomerCard();
         startCloudSync();
-        activatePush();
       } else {
         showView('view-register');
       }
@@ -284,7 +291,10 @@
         localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
         renderCustomerCard();
         startCloudSync();
-        activatePush();
+        
+        if ("Notification" in window && Notification.permission === "default") {
+          activatePush();
+        }
       } catch(e) { alert("Fallo de red."); }
       finally { btn.innerText = "Ingresar al Club"; btn.disabled = false; }
     }
