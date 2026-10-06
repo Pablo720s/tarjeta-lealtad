@@ -19,8 +19,7 @@
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
       await OneSignal.init({
-        appId: "d58ea2fb-a340-4669-9e14-f8baaf7cba74",
-        allowLocalhostAsSecureOrigin: true
+        appId: "d58ea2fb-a340-4669-9e14-f8baaf7cba74"
       });
     });
   </script>
@@ -40,7 +39,6 @@
 </head>
 <body class="bg-[#050608] text-slate-100 min-h-screen flex flex-col items-center justify-between p-4">
 
-  <!-- VISTAS DE INICIO Y REGISTRO -->
   <section id="view-portal" class="w-full max-w-sm my-auto flex flex-col gap-6">
     <div class="text-center">
       <span class="text-[10px] font-tech tracking-[0.3em] text-slate-400 uppercase font-semibold">Sistema Central</span>
@@ -77,7 +75,6 @@
     <button onclick="showView('view-portal')" class="text-xs text-slate-500">Volver</button>
   </section>
 
-  <!-- TARJETA DEL CLIENTE -->
   <section id="view-client-card" class="hidden w-full max-w-sm flex flex-col items-center gap-5 my-auto">
     <header class="w-full flex justify-between px-1">
       <div class="flex items-center gap-2">
@@ -93,10 +90,7 @@
           <h2 class="text-xl font-extrabold text-white" id="client-name-display">Nombre</h2>
           <p class="text-[11px] text-slate-400 font-mono" id="client-phone-display">Teléfono</p>
         </div>
-        <!-- BOTÓN CHIVATO DE NOTIFICACIONES -->
-        <button onclick="forceNotificationPrompt()" class="bg-blue-500/20 border border-blue-500/50 text-blue-400 p-2 rounded-xl text-xl active:scale-95" title="Activar Alertas">
-          🔔
-        </button>
+        <button onclick="forceNotificationPrompt()" class="bg-blue-500/20 border border-blue-500/50 text-blue-400 p-2 rounded-xl text-xl active:scale-95" title="Activar Alertas">🔔</button>
       </div>
 
       <div>
@@ -112,12 +106,14 @@
       <div class="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col items-center">
         <div class="bg-white p-3 rounded-xl" id="qrcode-target"></div>
         <span class="text-[10px] font-tech text-slate-300 font-bold mt-3 uppercase text-center">Escanear QR en caja</span>
-        <span class="text-[8px] font-mono text-slate-600 mt-1 truncate w-40 text-center" id="client-uid-tag">UID: ---</span>
+        
+        <!-- ESTA ES LA LÍNEA DEL UID QUE RECUPERAMOS -->
+        <span class="text-[10px] font-mono text-slate-400 mt-2 truncate w-48 text-center bg-black/50 px-2 py-1 rounded" id="client-uid-tag">UID: ---</span>
       </div>
     </main>
   </section>
 
-  <!-- MÓDULOS DEL TRABAJADOR (Menú, Escáner, Búsqueda, Acción, Broadcast) -->
+  <!-- MÓDULOS DEL TRABAJADOR -->
   <section id="view-staff-menu" class="hidden w-full max-w-sm my-auto flex flex-col gap-4">
     <header class="flex justify-between px-1 mb-2">
       <span class="text-[10px] font-tech text-emerald-400 uppercase font-semibold">Terminal Activa</span>
@@ -215,7 +211,11 @@
         currentCustomer = JSON.parse(saved);
         renderCustomerCard();
         startCloudSync();
-        forceNotificationPrompt(); // Intenta pedir permisos al entrar
+        
+        // Verifica si ya se tienen permisos; si sí, lo enlazamos en silencio a OneSignal
+        if (Notification.permission === "granted") {
+           window.OneSignalDeferred.push(function(OneSignal) { OneSignal.login(currentCustomer.uid); });
+        }
       } else {
         showView('view-register');
       }
@@ -228,6 +228,8 @@
 
       const name = document.getElementById('reg-name').value.trim();
       const rawPhone = document.getElementById('reg-phone').value.trim();
+      if(rawPhone.length !== 10) { alert("El número debe tener 10 dígitos"); btn.disabled = false; btn.innerText = "Ingresar"; return; }
+      
       const secureUid = 'ID-' + btoa(rawPhone).replace(/=/g, '').toUpperCase().substring(0, 16);
 
       try {
@@ -246,7 +248,14 @@
         localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
         renderCustomerCard();
         startCloudSync();
-        forceNotificationPrompt(); // Forzar ventana de permisos OneSignal
+        
+        // Dispara la campana nativa al registrarse
+        if (Notification.permission === "default") {
+          forceNotificationPrompt();
+        } else if (Notification.permission === "granted") {
+          window.OneSignalDeferred.push(function(OneSignal) { OneSignal.login(currentCustomer.uid); });
+        }
+
       } catch(e) { alert("Fallo de red."); } 
       finally { btn.innerText = "Ingresar al Club"; btn.disabled = false; }
     }
@@ -255,6 +264,7 @@
       showView('view-client-card');
       document.getElementById('client-name-display').innerText = currentCustomer.name;
       document.getElementById('client-phone-display').innerText = currentCustomer.phone;
+      document.getElementById('client-uid-tag').innerText = 'UID: ' + currentCustomer.uid;
       document.getElementById('client-stamp-counter').innerText = currentCustomer.stamps + ' / ' + MAX_STAMPS;
       document.getElementById('client-progress-bar').style.width = ((currentCustomer.stamps / MAX_STAMPS) * 100) + '%';
       
@@ -271,11 +281,22 @@
       new QRCode(document.getElementById('qrcode-target'), { text: qrPayload, width: 150, height: 150, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.L });
     }
 
-    // EL DISPARADOR FORZADO DE ONESIGNAL
+    // EL ATAQUE NATIVO AL SISTEMA (Evita el escudo de Brave/Chrome)
     function forceNotificationPrompt() {
-      window.OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.login(currentCustomer.uid); // Le dice a OneSignal quién es este usuario
-        OneSignal.Slidedown.promptPush({ force: true }); // Abre la ventana nativa
+      if (!("Notification" in window)) {
+        alert("Tu navegador no soporta notificaciones.");
+        return;
+      }
+
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          window.OneSignalDeferred.push(async function(OneSignal) {
+            if(currentCustomer) await OneSignal.login(currentCustomer.uid);
+          });
+          alert("¡Notificaciones activadas con éxito! Ahora recibirás las alertas oficiales.");
+        } else {
+          alert("Permiso Denegado. Ve al candadito en la barra de arriba (junto a la dirección web), busca Notificaciones y dale a 'Permitir'.");
+        }
       });
     }
 
