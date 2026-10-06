@@ -13,12 +13,14 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
 
-  <!-- MOTOR DE ONESIGNAL -->
+  <!-- MOTOR DE ONESIGNAL (CORRECCIÓN Qe) -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(function(OneSignal) {
-      OneSignal.init({ appId: "d58ea2fb-a340-4669-9e14-f8baaf7cba74" });
+    window.OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "d58ea2fb-a340-4669-9e14-f8baaf7cba74"
+      });
     });
   </script>
 
@@ -109,7 +111,6 @@
     </main>
   </section>
 
-  <!-- MÓDULOS DEL TRABAJADOR -->
   <section id="view-staff-menu" class="hidden w-full max-w-sm my-auto flex flex-col gap-4">
     <header class="flex justify-between px-1 mb-2">
       <span class="text-[10px] font-tech text-emerald-400 uppercase font-semibold">Terminal Activa</span>
@@ -195,8 +196,8 @@
     const MAX_STAMPS = 6;
     const STAFF_PIN = "123456";
     let qrReaderInstance = null;
-    let currentCustomer = null; 
-    let targetCustomer = null;  
+    let currentCustomer = null;
+    let targetCustomer = null;
     let syncIntervalId = null;
 
     function showView(viewId) {
@@ -207,31 +208,15 @@
       if (viewId !== 'view-client-card' && syncIntervalId) clearInterval(syncIntervalId);
     }
 
-    // EL SISTEMA INFALIBLE DE DIAGNÓSTICO
     function forceNotificationPrompt() {
-      Notification.requestPermission().then(permission => {
-        if (permission === "granted") {
-          window.OneSignalDeferred.push(async function(OneSignal) {
-            try {
-              if (currentCustomer) await OneSignal.login(currentCustomer.uid);
-              await OneSignal.User.PushSubscription.optIn();
-              
-              alert("Validando conexión con OneSignal... Espera 3 segundos.");
-              
-              setTimeout(() => {
-                const subId = OneSignal.User.PushSubscription.id;
-                if (subId) {
-                  alert("✅ ¡CONEXIÓN 100% EXITOSA! OneSignal registró tu celular con el ID: " + subId.substring(0,8) + "...");
-                } else {
-                  alert("❌ ERROR DE SERVIDOR DE ONESIGNAL:\n\nTu navegador dio permiso, pero OneSignal rechazó la conexión silenciosamente.\n\nCAUSAS:\n1. Estás en un iPhone con Brave/Chrome (Debes usar Safari y Añadir a la Pantalla de Inicio).\n2. El enlace configurado en el panel Web Push de OneSignal no es idéntico a la página que estás visitando (ej. falta el https://).\n3. Tienes un escudo estricto prendido.");
-                }
-              }, 3000);
-            } catch (err) {
-              alert("Error al ejecutar OneSignal: " + err);
-            }
-          });
-        } else {
-          alert("Permiso Denegado por tu navegador. Dale a 'Permitir' en la barra de direcciones.");
+      window.OneSignalDeferred.push(async function(OneSignal) {
+        try {
+          if (currentCustomer) {
+            await OneSignal.login(currentCustomer.uid);
+          }
+          await OneSignal.Slidedown.promptPush({ force: true });
+        } catch (error) {
+          alert("Error de compatibilidad con el navegador al conectar con los servidores.");
         }
       });
     }
@@ -242,6 +227,9 @@
         currentCustomer = JSON.parse(saved);
         renderCustomerCard();
         startCloudSync();
+        window.OneSignalDeferred.push(async function(OneSignal) {
+          await OneSignal.login(currentCustomer.uid);
+        });
       } else {
         showView('view-register');
       }
@@ -254,13 +242,15 @@
 
       const name = document.getElementById('reg-name').value.trim();
       const rawPhone = document.getElementById('reg-phone').value.trim();
+      if(rawPhone.length !== 10) { alert("El número debe tener 10 dígitos"); btn.disabled = false; btn.innerText = "Ingresar"; return; }
+      
       const secureUid = 'ID-' + btoa(rawPhone).replace(/=/g, '').toUpperCase().substring(0, 16);
 
       try {
         const res = await fetch(`/api/sync?uid=${secureUid}&nocache=${Date.now()}`);
         if (res.ok) {
           currentCustomer = (await res.json()).customer;
-          currentCustomer.name = name; 
+          currentCustomer.name = name;
         } else {
           currentCustomer = { uid: secureUid, name: name, phone: rawPhone, stamps: 0 };
           await fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uid: secureUid, action: 'REGISTER', customerData: currentCustomer }) });
@@ -268,7 +258,8 @@
         localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
         renderCustomerCard();
         startCloudSync();
-      } catch(e) { alert("Fallo de red."); } 
+        forceNotificationPrompt();
+      } catch(e) { alert("Fallo de red."); }
       finally { btn.innerText = "Ingresar al Club"; btn.disabled = false; }
     }
 
@@ -314,10 +305,10 @@
       }, 3000);
     }
     
-    function logoutCustomer() { 
-      localStorage.removeItem('aura_customer_profile'); 
+    function logoutCustomer() {
+      localStorage.removeItem('aura_customer_profile');
       window.OneSignalDeferred.push(function(OneSignal) { OneSignal.logout(); });
-      showView('view-portal'); 
+      showView('view-portal');
     }
 
     function verifyStaffPIN() {
