@@ -13,6 +13,16 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
 
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "d58ea2fb-a340-4669-9e14-f8baaf7cba74",
+      });
+    });
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
@@ -35,25 +45,10 @@
       border: 1px dashed rgba(255,255,255,0.12);
     }
     #scanner-video video { border-radius: 1.25rem; object-fit: cover; }
-    #in-app-notification { transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
   </style>
 </head>
 <body class="bg-[#050608] text-slate-100 min-h-screen flex flex-col items-center justify-between p-4">
 
-  <!-- ALERTA IN-APP INFALIBLE (Si el celular bloquea notificaciones nativas) -->
-  <div id="in-app-notification" class="fixed top-[-100%] left-0 w-full px-4 z-50 pt-4 flex justify-center">
-    <div class="bg-cyan-500 text-white w-full max-w-sm rounded-2xl p-4 shadow-[0_10px_40px_rgba(6,182,212,0.5)] border border-cyan-400 flex flex-col gap-1 cursor-pointer" onclick="closeInAppNotification()">
-      <div class="flex items-center gap-2">
-        <span class="text-xl">🔔</span>
-        <span class="text-[10px] font-tech uppercase tracking-widest font-bold text-cyan-100">Mensaje del Negocio</span>
-      </div>
-      <h3 id="in-app-title" class="font-bold text-lg mt-1">Título</h3>
-      <p id="in-app-body" class="text-sm opacity-90">Mensaje</p>
-      <p class="text-[9px] text-cyan-200 mt-2 text-center uppercase tracking-wider">Toca para cerrar</p>
-    </div>
-  </div>
-
-  <!-- PORTAL DE INICIO -->
   <section id="view-portal" class="w-full max-w-sm my-auto flex flex-col gap-6">
     <div class="text-center">
       <span class="text-[10px] font-tech tracking-[0.3em] text-slate-400 uppercase font-semibold">Sistema Central</span>
@@ -77,7 +72,6 @@
     </div>
   </section>
 
-  <!-- ACCESO / REGISTRO CLIENTE (POR NÚMERO) -->
   <section id="view-register" class="hidden w-full max-w-sm my-auto flex flex-col gap-5">
     <div class="text-center">
       <h2 class="text-2xl font-bold text-white">Acceso de Miembro</h2>
@@ -91,7 +85,6 @@
     <button onclick="showView('view-portal')" class="text-xs text-slate-500">Volver</button>
   </section>
 
-  <!-- ACCESO TRABAJADOR -->
   <section id="view-staff-auth" class="hidden w-full max-w-sm my-auto flex flex-col gap-5">
     <div class="text-center">
       <h2 class="text-2xl font-bold text-white">Terminal Personal</h2>
@@ -103,7 +96,6 @@
     <button onclick="showView('view-portal')" class="text-xs text-slate-500">Volver</button>
   </section>
 
-  <!-- TARJETA DEL CLIENTE -->
   <section id="view-client-card" class="hidden w-full max-w-sm flex flex-col items-center gap-5 my-auto">
     <header class="w-full flex justify-between px-1">
       <div class="flex items-center gap-2">
@@ -118,7 +110,6 @@
         <h2 class="text-xl font-extrabold text-white" id="client-name-display">Nombre</h2>
         <p class="text-[11px] text-slate-400 font-mono" id="client-phone-display">Teléfono</p>
       </div>
-
       <div>
         <div class="flex justify-between text-[10px] font-tech mb-2">
           <span class="text-slate-400">PROGRESO</span>
@@ -128,29 +119,21 @@
           <div id="client-progress-bar" class="bg-white h-full rounded-full transition-all duration-500" style="width: 0%"></div>
         </div>
       </div>
-
       <div id="client-stamps-grid" class="grid grid-cols-3 gap-3"></div>
-
       <div class="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col items-center">
         <div class="bg-white p-3 rounded-xl" id="qrcode-target"></div>
         <span class="text-[10px] font-tech text-slate-300 font-bold mt-3 uppercase text-center">Escanear QR en caja</span>
+        <span class="text-[8px] font-mono text-slate-600 mt-1 truncate w-40 text-center" id="client-uid-tag">UID: ---</span>
       </div>
     </main>
   </section>
 
-  <!-- ============================================== -->
-  <!-- MODÚLOS DEL TRABAJADOR REDISEÑADOS Y OPTIMIZADOS -->
-  <!-- ============================================== -->
-
-  <!-- MENÚ PRINCIPAL DEL TRABAJADOR (3 BOTONES) -->
   <section id="view-staff-menu" class="hidden w-full max-w-sm my-auto flex flex-col gap-4">
     <header class="flex justify-between px-1 mb-2">
       <span class="text-[10px] font-tech text-emerald-400 uppercase font-semibold">Terminal Activa</span>
       <button onclick="showView('view-portal')" class="text-xs font-tech text-slate-400 hover:text-white">Cerrar Sesión</button>
     </header>
-    
     <div class="grid grid-cols-1 gap-3">
-      <!-- 1. Botón de Cámara -->
       <button onclick="openScanner()" class="titanium-card p-5 rounded-3xl flex items-center gap-4 active:scale-95 transition-all text-left">
         <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-2xl">📸</div>
         <div>
@@ -158,8 +141,6 @@
           <span class="text-[10px] text-slate-400 block mt-0.5">Usar cámara para leer código QR</span>
         </div>
       </button>
-
-      <!-- 2. Botón Buscar por Teléfono (NUEVO) -->
       <button onclick="showView('view-staff-search')" class="titanium-card p-5 rounded-3xl flex items-center gap-4 active:scale-95 transition-all text-left">
         <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-2xl">🔍</div>
         <div>
@@ -167,8 +148,6 @@
           <span class="text-[10px] text-slate-400 block mt-0.5">Sellar si el cliente no trae su celular</span>
         </div>
       </button>
-
-      <!-- 3. Botón Notificaciones Masivas -->
       <button onclick="showView('view-staff-broadcast')" class="titanium-card p-5 rounded-3xl flex items-center gap-4 active:scale-95 transition-all text-left">
         <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-2xl border border-emerald-500/30">📢</div>
         <div>
@@ -179,7 +158,6 @@
     </div>
   </section>
 
-  <!-- MÓDULO 1: CÁMARA ESCÁNER -->
   <section id="view-staff-scanner" class="hidden w-full max-w-sm flex flex-col gap-4 my-auto">
     <header class="flex justify-between px-1">
       <span class="text-[10px] font-tech text-slate-400 uppercase font-semibold">Cámara Activa</span>
@@ -192,7 +170,6 @@
     </div>
   </section>
 
-  <!-- MÓDULO 2: BÚSQUEDA MANUAL POR TELÉFONO -->
   <section id="view-staff-search" class="hidden w-full max-w-sm flex flex-col gap-4 my-auto">
     <header class="flex justify-between px-1">
       <span class="text-[10px] font-tech text-slate-400 uppercase font-semibold">Búsqueda en Base de Datos</span>
@@ -203,35 +180,30 @@
         <h3 class="text-lg font-bold text-white">Buscar Cliente</h3>
         <p class="text-xs text-slate-400 mt-1">Escribe los 10 dígitos del cliente para jalar su tarjeta de la nube.</p>
       </div>
-      <input type="tel" id="manual-phone-search" placeholder="Número celular (10 dígitos)" maxlength="10" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none tracking-widest font-mono">
+      <input type="tel" id="manual-phone-search" placeholder="Número celular" maxlength="10" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none tracking-widest font-mono">
       <button id="btn-manual-search" onclick="searchByPhone()" class="w-full bg-white text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl active:scale-95">Buscar en Nube</button>
     </div>
   </section>
 
-  <!-- PANEL DE ACCIÓN DEL CLIENTE (AQUÍ LLEGAS AL ESCANEAR O BUSCAR) -->
   <section id="view-staff-action" class="hidden w-full max-w-sm flex flex-col gap-4 my-auto">
     <header class="flex justify-between px-1">
       <span class="text-[10px] font-tech text-emerald-400 uppercase font-semibold">Modo Edición</span>
       <button onclick="showView('view-staff-menu')" class="text-xs font-tech text-slate-400 hover:text-white">Terminar y Volver</button>
     </header>
-
     <div class="titanium-card p-5 rounded-3xl flex flex-col gap-4">
       <div>
         <span class="text-[9px] font-tech text-emerald-400 uppercase block">Ficha del Cliente</span>
         <h3 class="text-xl font-bold text-white" id="scanned-client-name">---</h3>
         <p class="text-[11px] text-slate-400 font-mono mt-0.5">Telf: <span id="scanned-client-phone">---</span></p>
       </div>
-
       <div class="flex justify-between bg-black/40 p-4 rounded-2xl border border-white/5">
         <span class="text-xs font-tech text-slate-300">Sellos Actuales</span>
         <span class="text-xl font-bold text-white font-tech" id="scanned-client-stamps">0 / 6</span>
       </div>
-
       <div class="flex gap-2">
         <button onclick="applyStampWorker()" id="btn-add-stamp" class="flex-1 bg-white text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl active:scale-95 shadow-lg">+ Sellar</button>
         <button onclick="redeemRewardWorker()" class="bg-slate-800 text-slate-200 font-tech font-bold text-xs uppercase px-4 py-3.5 rounded-xl border border-white/10 active:scale-95">Canjear</button>
       </div>
-
       <div class="border-t border-white/10 pt-4 mt-2 flex flex-col gap-2">
         <span class="text-[9px] font-tech text-slate-400 uppercase">Mensaje Directo a este Cliente</span>
         <input type="text" id="target-push-title" placeholder="Título" class="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
@@ -241,24 +213,20 @@
     </div>
   </section>
 
-  <!-- MÓDULO 3: DIFUSIÓN MASIVA (BROADCAST) -->
   <section id="view-staff-broadcast" class="hidden w-full max-w-sm flex flex-col gap-4 my-auto">
     <header class="flex justify-between px-1">
       <span class="text-[10px] font-tech text-emerald-400 uppercase font-semibold">Alerta Global</span>
       <button onclick="showView('view-staff-menu')" class="text-xs font-tech text-slate-400 hover:text-white">Volver al Menú</button>
     </header>
-
     <div class="titanium-card p-6 rounded-3xl flex flex-col gap-4">
       <div>
         <h3 class="text-lg font-bold text-white">Mensaje Masivo</h3>
         <p class="text-xs text-slate-400 mt-1">Llegará como notificación al celular de TODOS los clientes inscritos en el club.</p>
       </div>
-      
       <div class="flex flex-col gap-2 mt-2">
         <input type="text" id="broadcast-title" placeholder="Ej. ¡Hoy 2x1 en bebidas!" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none">
         <textarea id="broadcast-body" placeholder="Describe la promoción aquí..." rows="3" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none"></textarea>
       </div>
-
       <button onclick="sendBroadcast()" class="w-full bg-emerald-500 text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl active:scale-95 mt-2">
         Disparar a Todos
       </button>
@@ -272,23 +240,18 @@
     let currentCustomer = null; 
     let targetCustomer = null;  
     let syncIntervalId = null;
-    let lastNotifId = 0;
 
     function showView(viewId) {
       ['view-portal', 'view-register', 'view-staff-auth', 'view-client-card', 'view-staff-menu', 'view-staff-scanner', 'view-staff-search', 'view-staff-action', 'view-staff-broadcast'].forEach(id => {
         document.getElementById(id).classList.add('hidden');
       });
       document.getElementById(viewId).classList.remove('hidden');
-      
       if (viewId !== 'view-client-card' && syncIntervalId) {
         clearInterval(syncIntervalId);
         syncIntervalId = null;
       }
     }
 
-    /* =========================================
-       LÓGICA DEL CLIENTE 
-       ========================================= */
     async function goToClientPortal() {
       const saved = localStorage.getItem('aura_customer_profile');
       if (saved) {
@@ -362,10 +325,11 @@
     }
 
     function requestNotificationAccess() {
-      // Fuerza al navegador a pedir permiso si el cliente no lo ha dado
-      if ("Notification" in window && Notification.permission === "default") {
-        Notification.requestPermission();
-      }
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(function(OneSignal) {
+        OneSignal.login(currentCustomer.uid);
+        OneSignal.Slidedown.promptPush();
+      });
     }
 
     function startCloudSync() {
@@ -377,65 +341,25 @@
           if (res.ok) {
             document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
             document.getElementById('cloud-status-text').innerText = "Nube OK";
-
             const data = await res.json();
             const cloudCustomer = data.customer;
-            const cloudGlobal = data.globalNotification;
-
             if (cloudCustomer.stamps !== undefined && cloudCustomer.stamps !== currentCustomer.stamps) {
               currentCustomer.stamps = cloudCustomer.stamps;
               localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
               if(navigator.vibrate) navigator.vibrate([100,50]);
               renderCustomerCard();
             }
-
-            const savedPrivId = localStorage.getItem('aura_notif_priv');
-            if (cloudCustomer.pendingNotification && String(cloudCustomer.pendingNotification.id) !== savedPrivId) {
-              localStorage.setItem('aura_notif_priv', String(cloudCustomer.pendingNotification.id));
-              triggerNativePush(cloudCustomer.pendingNotification.title, cloudCustomer.pendingNotification.body);
-            }
-
-            const savedGlobId = localStorage.getItem('aura_notif_glob');
-            if (cloudGlobal && String(cloudGlobal.id) !== savedGlobId) {
-              localStorage.setItem('aura_notif_glob', String(cloudGlobal.id));
-              triggerNativePush(cloudGlobal.title, cloudGlobal.body);
-            }
           }
         } catch (e) {}
       }, 3000);
     }
-
-    // DISPARADOR INFALIBLE DE NOTIFICACIONES
-    function triggerNativePush(title, body) {
-      if(navigator.vibrate) navigator.vibrate([200,100,200]);
-      
-      if ("Notification" in window && Notification.permission === "granted") {
-        // Usa Service Worker de manera correcta para enviar notificación al sistema
-        navigator.serviceWorker.getRegistration().then(reg => {
-          if (reg) {
-            reg.showNotification(title, { body: body, icon: '/icon-192.png', badge: '/icon-192.png' });
-          } else {
-            new Notification(title, { body: body, icon: '/icon-192.png' });
-          }
-        }).catch(() => { new Notification(title, { body: body, icon: '/icon-192.png' }); });
-      } else {
-        // CAJA AZUL SI EL CELULAR LAS TIENE BLOQUEADAS
-        document.getElementById('in-app-title').innerText = title;
-        document.getElementById('in-app-body').innerText = body;
-        document.getElementById('in-app-notification').style.top = '10px';
-      }
-    }
-
-    function closeInAppNotification() { document.getElementById('in-app-notification').style.top = '-100%'; }
     
     function logoutCustomer() { 
       localStorage.removeItem('aura_customer_profile'); 
+      window.OneSignalDeferred.push(function(OneSignal) { OneSignal.logout(); });
       showView('view-portal'); 
     }
 
-    /* =========================================
-       LÓGICA DEL TRABAJADOR
-       ========================================= */
     function verifyStaffPIN() {
       if (document.getElementById('staff-pin-input').value === STAFF_PIN) {
         document.getElementById('staff-pin-input').value = '';
@@ -443,7 +367,6 @@
       } else alert("PIN Incorrecto.");
     }
 
-    // 1. MÓDULO DE CÁMARA CORREGIDO PARA NO TRABARSE
     function openScanner() {
       showView('view-staff-scanner');
       qrReaderInstance = new Html5Qrcode("scanner-video");
@@ -456,18 +379,14 @@
     }
 
     async function handleScannedQR(rawText) {
-      // APAGA LA CÁMARA AL INSTANTE DE LEER EL CÓDIGO PARA LIBERAR RAM
       try { await qrReaderInstance.stop(); qrReaderInstance.clear(); } catch(e) {}
-      
       let uid = rawText.trim();
       let fallbackCustomer = null;
-
       if (uid.includes('|')) {
         const parts = uid.split('|');
         uid = parts[0];
         fallbackCustomer = { uid: parts[0], name: parts[1], phone: parts[2], stamps: parseInt(parts[3]) || 0 };
       }
-
       loadClientIntoActionPanel(uid, fallbackCustomer);
     }
 
@@ -477,24 +396,17 @@
       } else { showView('view-staff-menu'); }
     }
 
-    // 2. NUEVO MÓDULO: BÚSQUEDA MANUAL POR TELÉFONO
     async function searchByPhone() {
       const phone = document.getElementById('manual-phone-search').value.trim();
       if(phone.length !== 10) { alert("Debes ingresar 10 dígitos exactos."); return; }
-      
       const btn = document.getElementById('btn-manual-search');
       btn.innerText = "Buscando..."; btn.disabled = true;
-
-      // Misma encriptación que el cliente
       const searchUid = 'ID-' + btoa(phone).replace(/=/g, '').toUpperCase().substring(0, 16);
-      
       await loadClientIntoActionPanel(searchUid, null);
-      
       document.getElementById('manual-phone-search').value = '';
       btn.innerText = "Buscar en Nube"; btn.disabled = false;
     }
 
-    // CARGADOR CENTRAL (Sirve para QR o para búsqueda manual)
     async function loadClientIntoActionPanel(uid, fallbackData) {
       try {
         const res = await fetch(`/api/sync?uid=${uid}&nocache=${Date.now()}`);
@@ -513,7 +425,6 @@
           alert("El cliente no está registrado en la base de datos."); return;
         }
       }
-
       showView('view-staff-action');
       document.getElementById('scanned-client-name').innerText = targetCustomer.name;
       document.getElementById('scanned-client-phone').innerText = targetCustomer.phone || "---";
@@ -521,18 +432,14 @@
       if(navigator.vibrate) navigator.vibrate(60);
     }
 
-    // 3. ACCIONES DEL TRABAJADOR
     async function applyStampWorker() {
       if (!targetCustomer) return;
       if (targetCustomer.stamps >= MAX_STAMPS) { alert("Tarjeta llena"); return; }
-      
       const btn = document.getElementById('btn-add-stamp');
       btn.innerText = "Sellando..."; btn.disabled = true;
-
       targetCustomer.stamps += 1;
       document.getElementById('scanned-client-stamps').innerText = targetCustomer.stamps + ' / ' + MAX_STAMPS;
       localStorage.setItem('aura_staff_db_' + targetCustomer.uid, JSON.stringify(targetCustomer));
-
       try {
         await fetch('/api/sync', {
           method: 'POST',
@@ -540,7 +447,6 @@
           body: JSON.stringify({ uid: targetCustomer.uid, action: 'REGISTER', customerData: targetCustomer })
         });
       } catch (err) {}
-      
       if(navigator.vibrate) navigator.vibrate([50,50,50]);
       btn.innerText = "+ Sellar"; btn.disabled = false;
     }
@@ -550,7 +456,6 @@
       targetCustomer.stamps = 0;
       document.getElementById('scanned-client-stamps').innerText = '0 / ' + MAX_STAMPS;
       localStorage.setItem('aura_staff_db_' + targetCustomer.uid, JSON.stringify(targetCustomer));
-
       fetch('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -564,18 +469,13 @@
       const title = document.getElementById('target-push-title').value;
       const body = document.getElementById('target-push-body').value;
       if (!title || !body) { alert("Llena el título y mensaje"); return; }
-
       fetch('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          uid: targetCustomer.uid,
-          action: 'SEND_NOTIFICATION',
-          notification: { title, body }
-        })
+        body: JSON.stringify({ uid: targetCustomer.uid, action: 'SEND_NOTIFICATION', notification: { title, body } })
       }).then(res => {
         if(res.ok) {
-          alert("¡Mensaje enviado al celular de " + targetCustomer.name + "!");
+          alert("¡Notificación push oficial disparada!");
           document.getElementById('target-push-title').value = '';
           document.getElementById('target-push-body').value = '';
         }
@@ -586,14 +486,13 @@
       const title = document.getElementById('broadcast-title').value;
       const body = document.getElementById('broadcast-body').value;
       if (!title || !body) { alert("Llena el título y la descripción."); return; }
-
       fetch('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'BROADCAST', notification: { title, body } })
       }).then(res => {
         if(res.ok) {
-          alert("¡Alerta disparada a todos los clientes!");
+          alert("¡Alerta push masiva disparada a todos los clientes!");
           document.getElementById('broadcast-title').value = '';
           document.getElementById('broadcast-body').value = '';
           showView('view-staff-menu');
