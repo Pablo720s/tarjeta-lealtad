@@ -40,7 +40,7 @@
 </head>
 <body class="bg-[#050608] text-slate-100 min-h-screen flex flex-col items-center justify-between p-4">
 
-  <!-- ALERTA IN-APP PARA EL CLIENTE -->
+  <!-- ALERTA IN-APP DE RESPALDO (SOLO SI EL SISTEMA NATIVO FALLA) -->
   <div id="in-app-notification" class="fixed top-[-100%] left-0 w-full px-4 z-50 pt-4 flex justify-center">
     <div class="bg-cyan-500 text-white w-full max-w-sm rounded-2xl p-4 shadow-[0_10px_40px_rgba(6,182,212,0.5)] border border-cyan-400 flex flex-col gap-1 cursor-pointer" onclick="closeInAppNotification()">
       <div class="flex items-center gap-2">
@@ -49,7 +49,6 @@
       </div>
       <h3 id="in-app-title" class="font-bold text-lg mt-1">Título</h3>
       <p id="in-app-body" class="text-sm opacity-90">Mensaje</p>
-      <p class="text-[9px] text-cyan-200 mt-2 text-center uppercase tracking-wider">Toca para cerrar</p>
     </div>
   </div>
 
@@ -70,23 +69,23 @@
       <button onclick="showView('view-staff-auth')" class="titanium-card p-5 rounded-2xl flex items-center justify-between text-left active:scale-[0.98]">
         <div>
           <span class="text-base font-bold text-white block">Soy Trabajador</span>
-          <span class="text-xs text-slate-400">Escanear y sellar visitas</span>
+          <span class="text-xs text-slate-400">Terminal y Notificaciones</span>
         </div>
         <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400">🔒</div>
       </button>
     </div>
   </section>
 
-  <!-- ACCESO / REGISTRO CLIENTE UNIFICADO -->
+  <!-- REGISTRO CLIENTE (AHORA CON TELÉFONO) -->
   <section id="view-register" class="hidden w-full max-w-sm my-auto flex flex-col gap-5">
     <div class="text-center">
       <h2 class="text-2xl font-bold text-white">Acceso de Miembro</h2>
-      <p class="text-xs text-slate-400 mt-1">Si ya tienes tarjeta, usa tu mismo correo para recuperar tus sellos guardados.</p>
+      <p class="text-xs text-slate-400 mt-1">Ingresa tu número celular para crear o recuperar tu pase digital.</p>
     </div>
     <form onsubmit="handleRegister(event)" class="titanium-card p-6 rounded-3xl flex flex-col gap-4">
       <input type="text" id="reg-name" required placeholder="Nombre Completo" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none">
-      <input type="email" id="reg-email" required placeholder="Correo Electrónico" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none">
-      <button type="submit" id="btn-submit-reg" class="w-full bg-white text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl active:scale-95">Ingresar / Crear Tarjeta</button>
+      <input type="tel" id="reg-phone" required placeholder="Número Celular (10 dígitos)" maxlength="10" pattern="[0-9]{10}" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none tracking-widest font-mono">
+      <button type="submit" id="btn-submit-reg" class="w-full bg-white text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl active:scale-95">Ingresar al Club</button>
     </form>
     <button onclick="showView('view-portal')" class="text-xs text-slate-500">Volver</button>
   </section>
@@ -110,13 +109,13 @@
         <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
         <span id="cloud-status-text" class="text-[10px] font-tech text-emerald-400 uppercase">Sincronización Activa</span>
       </div>
-      <button onclick="logoutCustomer()" class="text-[10px] font-tech text-slate-500 uppercase">Cerrar Sesión</button>
+      <button onclick="logoutCustomer()" class="text-[10px] font-tech text-slate-500 uppercase hover:text-white">Cerrar Sesión</button>
     </header>
 
     <main class="w-full titanium-card rounded-[2.2rem] p-6 flex flex-col gap-5">
       <div>
         <h2 class="text-xl font-extrabold text-white" id="client-name-display">Nombre</h2>
-        <p class="text-[11px] text-slate-400 font-mono" id="client-email-display">correo</p>
+        <p class="text-[11px] text-slate-400 font-mono" id="client-phone-display">Teléfono</p>
       </div>
 
       <div>
@@ -133,17 +132,39 @@
 
       <div class="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col items-center">
         <div class="bg-white p-3 rounded-xl" id="qrcode-target"></div>
-        <span class="text-[10px] font-tech text-slate-300 font-bold mt-3 uppercase text-center" id="client-status-note">Escanear QR en caja</span>
+        <span class="text-[10px] font-tech text-slate-300 font-bold mt-3 uppercase text-center">Escanear QR en caja</span>
         <span class="text-[8px] font-mono text-slate-600 mt-1 truncate w-40 text-center" id="client-uid-tag">UID: ---</span>
       </div>
     </main>
   </section>
 
-  <!-- TERMINAL DEL TRABAJADOR -->
-  <section id="view-staff-dashboard" class="hidden w-full max-w-sm flex flex-col gap-4 my-auto">
+  <!-- MENÚ PRINCIPAL DEL TRABAJADOR -->
+  <section id="view-staff-menu" class="hidden w-full max-w-sm my-auto flex flex-col gap-5">
     <header class="flex justify-between px-1">
-      <span class="text-[10px] font-tech text-slate-400 uppercase font-semibold">Lector QR</span>
-      <button onclick="stopCameraAndExit()" class="text-xs font-tech text-slate-400">Cerrar</button>
+      <span class="text-[10px] font-tech text-emerald-400 uppercase font-semibold">Terminal Activa</span>
+      <button onclick="showView('view-portal')" class="text-xs font-tech text-slate-400 hover:text-white">Cerrar Sesión</button>
+    </header>
+    
+    <div class="flex flex-col gap-3">
+      <button onclick="openScanner()" class="titanium-card p-6 rounded-3xl flex flex-col items-center gap-2 active:scale-95 transition-all">
+        <span class="text-3xl">📸</span>
+        <span class="text-sm font-bold text-white font-tech uppercase tracking-wider">Escanear Tarjeta</span>
+        <span class="text-[10px] text-slate-400 text-center">Leer códigos QR para sellar o canjear</span>
+      </button>
+
+      <button onclick="openBroadcast()" class="titanium-card p-6 rounded-3xl flex flex-col items-center gap-2 active:scale-95 transition-all">
+        <span class="text-3xl">📢</span>
+        <span class="text-sm font-bold text-white font-tech uppercase tracking-wider">Difusión Masiva</span>
+        <span class="text-[10px] text-slate-400 text-center">Enviar alerta push a todos los clientes</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- SECCIÓN: CÁMARA Y FICHA DEL CLIENTE -->
+  <section id="view-staff-scanner" class="hidden w-full max-w-sm flex flex-col gap-4 my-auto">
+    <header class="flex justify-between px-1">
+      <span class="text-[10px] font-tech text-slate-400 uppercase font-semibold">Modo Escáner</span>
+      <button onclick="closeScannerAndMenu()" class="text-xs font-tech text-slate-400 hover:text-white">Volver al Menú</button>
     </header>
 
     <div class="titanium-card p-4 rounded-3xl flex flex-col items-center gap-3">
@@ -152,11 +173,12 @@
       </div>
     </div>
 
+    <!-- Ficha de la persona escaneada -->
     <div id="staff-client-card" class="hidden titanium-card p-5 rounded-3xl flex flex-col gap-4">
       <div>
         <span class="text-[9px] font-tech text-emerald-400 uppercase block">Cliente Reconocido</span>
         <h3 class="text-lg font-bold text-white" id="scanned-client-name">---</h3>
-        <p class="text-[10px] text-slate-400 font-mono truncate">UID: <span id="scanned-client-uid">---</span></p>
+        <p class="text-[10px] text-slate-400 font-mono">UID: <span id="scanned-client-uid">---</span></p>
       </div>
 
       <div class="flex justify-between bg-black/40 p-3 rounded-xl border border-white/5">
@@ -170,11 +192,35 @@
       </div>
 
       <div class="border-t border-white/10 pt-3 flex flex-col gap-2">
-        <span class="text-[9px] font-tech text-slate-400 uppercase">Notificación Remota</span>
+        <span class="text-[9px] font-tech text-slate-400 uppercase">Mensaje Privado a este cliente</span>
         <input type="text" id="target-push-title" placeholder="Título" class="w-full bg-black/50 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none">
         <input type="text" id="target-push-body" placeholder="Mensaje" class="w-full bg-black/50 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none">
-        <button onclick="sendPushWorker()" class="w-full bg-white/10 text-white font-tech text-xs uppercase py-2 rounded-lg border border-white/10 active:scale-95">Enviar Notificación</button>
+        <button onclick="sendPushDirect()" class="w-full bg-white/10 text-white font-tech text-xs uppercase py-2 rounded-lg border border-white/10 active:scale-95">Avisar a su celular</button>
       </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN: DIFUSIÓN MASIVA (BROADCAST) -->
+  <section id="view-staff-broadcast" class="hidden w-full max-w-sm flex flex-col gap-4 my-auto">
+    <header class="flex justify-between px-1">
+      <span class="text-[10px] font-tech text-slate-400 uppercase font-semibold">Módulo Push</span>
+      <button onclick="showView('view-staff-menu')" class="text-xs font-tech text-slate-400 hover:text-white">Volver al Menú</button>
+    </header>
+
+    <div class="titanium-card p-6 rounded-3xl flex flex-col gap-4">
+      <div>
+        <h3 class="text-lg font-bold text-white">Alerta Global</h3>
+        <p class="text-xs text-slate-400 mt-1">Este mensaje llegará a los navegadores de todos los clientes registrados.</p>
+      </div>
+      
+      <div class="flex flex-col gap-2 mt-2">
+        <input type="text" id="broadcast-title" placeholder="Ej. ¡Hoy 2x1 en todo!" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none">
+        <textarea id="broadcast-body" placeholder="Descripción de la promoción..." rows="3" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none"></textarea>
+      </div>
+
+      <button onclick="sendBroadcast()" class="w-full bg-emerald-500 text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl active:scale-95 mt-2">
+        Disparar a Todos
+      </button>
     </div>
   </section>
 
@@ -185,11 +231,13 @@
     let currentCustomer = null; 
     let targetCustomer = null;  
     let syncIntervalId = null;
-    let lastNotifId = 0;
 
     function showView(viewId) {
-      ['view-portal', 'view-register', 'view-staff-auth', 'view-client-card', 'view-staff-dashboard'].forEach(id => document.getElementById(id).classList.add('hidden'));
+      ['view-portal', 'view-register', 'view-staff-auth', 'view-client-card', 'view-staff-menu', 'view-staff-scanner', 'view-staff-broadcast'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
       document.getElementById(viewId).classList.remove('hidden');
+      
       if (viewId !== 'view-client-card' && syncIntervalId) {
         clearInterval(syncIntervalId);
         syncIntervalId = null;
@@ -197,7 +245,7 @@
     }
 
     /* =========================================
-       LÓGICA DEL CLIENTE 
+       LÓGICA DEL CLIENTE (USANDO TELÉFONO)
        ========================================= */
     async function goToClientPortal() {
       const saved = localStorage.getItem('aura_customer_profile');
@@ -205,6 +253,7 @@
         currentCustomer = JSON.parse(saved);
         renderCustomerCard();
         startCloudSync();
+        requestNotificationAccess();
       } else {
         showView('view-register');
       }
@@ -213,25 +262,23 @@
     async function handleRegister(e) {
       e.preventDefault();
       const btn = document.getElementById('btn-submit-reg');
-      btn.innerText = "Buscando en la nube...";
+      btn.innerText = "Conectando...";
       btn.disabled = true;
 
       const name = document.getElementById('reg-name').value.trim();
-      const rawEmail = document.getElementById('reg-email').value.trim().toLowerCase();
+      const rawPhone = document.getElementById('reg-phone').value.trim();
       
-      // GENERACIÓN DEL UID MAESTRO: Encriptamos el correo para que siempre sea el mismo identificador
-      const secureUid = 'ID-' + btoa(encodeURIComponent(rawEmail)).replace(/=/g, '').toUpperCase().substring(0, 16);
+      // UID basado en el número de teléfono (Identidad Fija)
+      const secureUid = 'ID-' + btoa(rawPhone).replace(/=/g, '').toUpperCase().substring(0, 16);
 
       try {
-        // 1. Preguntamos a Cloudflare si este cliente ya tiene historial
         const res = await fetch(`/api/sync?uid=${secureUid}&nocache=${Date.now()}`);
         if (res.ok) {
-          // Existe: ¡Recuperamos todos sus sellos!
-          currentCustomer = await res.json();
-          currentCustomer.name = name; // Actualiza el nombre por si hubo corrección
+          const cloudData = await res.json();
+          currentCustomer = cloudData.customer;
+          currentCustomer.name = name; 
         } else {
-          // No existe: Lo registramos desde cero
-          currentCustomer = { uid: secureUid, name: name, email: rawEmail, stamps: 0 };
+          currentCustomer = { uid: secureUid, name: name, phone: rawPhone, stamps: 0 };
           await fetch('/api/sync', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -239,19 +286,14 @@
           });
         }
 
-        // Guardamos la sesión exitosa
         localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
-        
-        if ("Notification" in window && Notification.permission !== "granted") {
-          Notification.requestPermission();
-        }
-
+        requestNotificationAccess();
         renderCustomerCard();
         startCloudSync();
       } catch(e) {
-        alert("Revisa tu conexión a internet para continuar.");
+        alert("Fallo de red. Comprueba tu conexión a internet.");
       } finally {
-        btn.innerText = "Ingresar / Crear Tarjeta";
+        btn.innerText = "Ingresar al Club";
         btn.disabled = false;
       }
     }
@@ -259,7 +301,7 @@
     function renderCustomerCard() {
       showView('view-client-card');
       document.getElementById('client-name-display').innerText = currentCustomer.name;
-      document.getElementById('client-email-display').innerText = currentCustomer.email;
+      document.getElementById('client-phone-display').innerText = currentCustomer.phone || "Usuario";
       document.getElementById('client-uid-tag').innerText = 'UID: ' + currentCustomer.uid;
       document.getElementById('client-stamp-counter').innerText = currentCustomer.stamps + ' / ' + MAX_STAMPS + ' SELLOS';
       document.getElementById('client-progress-bar').style.width = ((currentCustomer.stamps / MAX_STAMPS) * 100) + '%';
@@ -274,8 +316,7 @@
         </div>`;
       }
 
-      // EL QR VUELVE A SER SIMPLE Y RÁPIDO
-      const qrPayload = `${currentCustomer.uid}|${currentCustomer.name}|${currentCustomer.email}|${currentCustomer.stamps}`;
+      const qrPayload = `${currentCustomer.uid}|${currentCustomer.name}|${currentCustomer.phone}|${currentCustomer.stamps}`;
       const qrBox = document.getElementById('qrcode-target');
       qrBox.innerHTML = '';
       new QRCode(qrBox, {
@@ -288,7 +329,13 @@
       });
     }
 
-    // BUCLE FANTASMA DE SINCRONIZACIÓN CADA 3 SEGUNDOS
+    // GESTIÓN DE NOTIFICACIONES ÚNICAS Y NATIVAS
+    function requestNotificationAccess() {
+      if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+        Notification.requestPermission();
+      }
+    }
+
     function startCloudSync() {
       if (syncIntervalId) clearInterval(syncIntervalId);
       syncIntervalId = setInterval(async () => {
@@ -301,16 +348,31 @@
             document.getElementById('cloud-status-text').className = "text-[10px] font-tech text-emerald-400 uppercase";
 
             const data = await res.json();
-            if (data.stamps !== undefined && data.stamps !== currentCustomer.stamps) {
-              currentCustomer.stamps = data.stamps;
+            const cloudCustomer = data.customer;
+            const cloudGlobal = data.globalNotification;
+
+            // Actualiza sellos
+            if (cloudCustomer.stamps !== undefined && cloudCustomer.stamps !== currentCustomer.stamps) {
+              currentCustomer.stamps = cloudCustomer.stamps;
               localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
               if(navigator.vibrate) navigator.vibrate([100,50]);
               renderCustomerCard();
             }
-            if (data.pendingNotification && data.pendingNotification.id !== lastNotifId) {
-              lastNotifId = data.pendingNotification.id;
-              fireNotification(data.pendingNotification.title, data.pendingNotification.body);
+
+            // Procesa Notificación Privada (Directa)
+            const savedPrivId = localStorage.getItem('aura_notif_priv');
+            if (cloudCustomer.pendingNotification && String(cloudCustomer.pendingNotification.id) !== savedPrivId) {
+              localStorage.setItem('aura_notif_priv', String(cloudCustomer.pendingNotification.id));
+              triggerNativePush(cloudCustomer.pendingNotification.title, cloudCustomer.pendingNotification.body);
             }
+
+            // Procesa Notificación Global (Broadcast)
+            const savedGlobId = localStorage.getItem('aura_notif_glob');
+            if (cloudGlobal && String(cloudGlobal.id) !== savedGlobId) {
+              localStorage.setItem('aura_notif_glob', String(cloudGlobal.id));
+              triggerNativePush(cloudGlobal.title, cloudGlobal.body);
+            }
+
           } else {
             document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-red-500";
             document.getElementById('cloud-status-text').innerText = "Error BD";
@@ -323,11 +385,21 @@
       }, 3000);
     }
 
-    function fireNotification(title, body) {
+    function triggerNativePush(title, body) {
       if(navigator.vibrate) navigator.vibrate([200,100,200]);
-      document.getElementById('in-app-title').innerText = title;
-      document.getElementById('in-app-body').innerText = body;
-      document.getElementById('in-app-notification').style.top = '10px';
+      
+      if ("Notification" in window && Notification.permission === "granted") {
+        navigator.serviceWorker.ready.then(reg => {
+          reg.showNotification(title, { body: body, icon: '/icon-192.png' });
+        }).catch(() => {
+          new Notification(title, { body: body, icon: '/icon-192.png' });
+        });
+      } else {
+        // Solo como respaldo de emergencia si el usuario no dio permisos nativos
+        document.getElementById('in-app-title').innerText = title;
+        document.getElementById('in-app-body').innerText = body;
+        document.getElementById('in-app-notification').style.top = '10px';
+      }
     }
 
     function closeInAppNotification() { document.getElementById('in-app-notification').style.top = '-100%'; }
@@ -343,20 +415,35 @@
     function verifyStaffPIN() {
       if (document.getElementById('staff-pin-input').value === STAFF_PIN) {
         document.getElementById('staff-pin-input').value = '';
-        showView('view-staff-dashboard');
-        qrReaderInstance = new Html5Qrcode("scanner-video");
-        qrReaderInstance.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 220, height: 220 } },
-          (text) => processScannedQR(text),
-          (err) => {}
-        ).catch(() => alert("Da permisos de cámara al navegador."));
+        showView('view-staff-menu');
       } else alert("PIN Incorrecto.");
     }
 
-    function stopCameraAndExit() {
-      if (qrReaderInstance) { qrReaderInstance.stop().then(() => { qrReaderInstance.clear(); showView('view-portal'); }); } 
-      else showView('view-portal');
+    function openScanner() {
+      showView('view-staff-scanner');
+      document.getElementById('staff-client-card').classList.add('hidden');
+      qrReaderInstance = new Html5Qrcode("scanner-video");
+      qrReaderInstance.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 220, height: 220 } },
+        (text) => processScannedQR(text),
+        (err) => {}
+      ).catch(() => alert("Da permisos de cámara al navegador."));
+    }
+
+    function closeScannerAndMenu() {
+      if (qrReaderInstance) {
+        qrReaderInstance.stop().then(() => {
+          qrReaderInstance.clear();
+          showView('view-staff-menu');
+        }).catch(() => showView('view-staff-menu'));
+      } else {
+        showView('view-staff-menu');
+      }
+    }
+
+    function openBroadcast() {
+      showView('view-staff-broadcast');
     }
 
     async function processScannedQR(rawText) {
@@ -366,27 +453,22 @@
       if (uid.includes('|')) {
         const parts = uid.split('|');
         uid = parts[0];
-        fallbackCustomer = { uid: parts[0], name: parts[1], email: parts[2], stamps: parseInt(parts[3]) || 0 };
+        fallbackCustomer = { uid: parts[0], name: parts[1], phone: parts[2], stamps: parseInt(parts[3]) || 0 };
       }
 
       try {
         const res = await fetch(`/api/sync?uid=${uid}&nocache=${Date.now()}`);
         if (res.ok) {
-          targetCustomer = await res.json();
-        } else {
-          throw new Error("No en la nube");
-        }
+          const cloudData = await res.json();
+          targetCustomer = cloudData.customer;
+        } else { throw new Error("No en la nube"); }
       } catch(e) {
         const local = localStorage.getItem('aura_staff_db_' + uid);
         if (local) {
           targetCustomer = JSON.parse(local);
         } else if (fallbackCustomer) {
           targetCustomer = fallbackCustomer;
-          fetch('/api/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ uid: targetCustomer.uid, action: 'REGISTER', customerData: targetCustomer })
-          });
+          fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uid: targetCustomer.uid, action: 'REGISTER', customerData: targetCustomer }) });
         } else {
           alert("Error: Código no reconocido."); return;
         }
@@ -411,19 +493,12 @@
       localStorage.setItem('aura_staff_db_' + targetCustomer.uid, JSON.stringify(targetCustomer));
 
       try {
-        const res = await fetch('/api/sync', {
+        await fetch('/api/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ uid: targetCustomer.uid, action: 'REGISTER', customerData: targetCustomer })
         });
-        
-        if (!res.ok) {
-          const errData = await res.text();
-          alert("¡ALERTA!: El sello se guardó en este celular, pero la Nube lo rechazó.");
-        }
-      } catch (err) {
-        alert("Fallo de red. El sello se guardó solo en este dispositivo.");
-      }
+      } catch (err) {}
       
       if(navigator.vibrate) navigator.vibrate([50,50,50]);
       btn.innerText = "+ Sellar"; btn.disabled = false;
@@ -443,7 +518,8 @@
       alert("Premio canjeado. Tarjeta en cero.");
     }
 
-    async function sendPushWorker() {
+    // ENVÍA A UN SOLO CLIENTE
+    function sendPushDirect() {
       if (!targetCustomer) return;
       const title = document.getElementById('target-push-title').value;
       const body = document.getElementById('target-push-body').value;
@@ -459,11 +535,32 @@
         })
       }).then(res => {
         if(res.ok) {
-          alert("¡Mensaje en camino al teléfono del cliente!");
+          alert("¡Mensaje enviado al celular de " + targetCustomer.name + "!");
           document.getElementById('target-push-title').value = '';
           document.getElementById('target-push-body').value = '';
-        } else {
-          alert("La base de datos de Cloudflare rechazó el mensaje.");
+        }
+      });
+    }
+
+    // ENVÍA A TODOS LOS CLIENTES (BROADCAST)
+    function sendBroadcast() {
+      const title = document.getElementById('broadcast-title').value;
+      const body = document.getElementById('broadcast-body').value;
+      if (!title || !body) { alert("Llena el título y la descripción."); return; }
+
+      fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'BROADCAST',
+          notification: { title, body }
+        })
+      }).then(res => {
+        if(res.ok) {
+          alert("¡Alerta disparada a todos los clientes!");
+          document.getElementById('broadcast-title').value = '';
+          document.getElementById('broadcast-body').value = '';
+          showView('view-staff-menu');
         }
       });
     }
