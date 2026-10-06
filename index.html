@@ -18,9 +18,7 @@
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(function(OneSignal) {
-      OneSignal.init({
-        appId: "d58ea2fb-a340-4669-9e14-f8baaf7cba74"
-      });
+      OneSignal.init({ appId: "d58ea2fb-a340-4669-9e14-f8baaf7cba74" });
     });
   </script>
 
@@ -39,7 +37,6 @@
 </head>
 <body class="bg-[#050608] text-slate-100 min-h-screen flex flex-col items-center justify-between p-4">
 
-  <!-- VISTAS DE INICIO Y REGISTRO -->
   <section id="view-portal" class="w-full max-w-sm my-auto flex flex-col gap-6">
     <div class="text-center">
       <span class="text-[10px] font-tech tracking-[0.3em] text-slate-400 uppercase font-semibold">Sistema Central</span>
@@ -76,7 +73,6 @@
     <button onclick="showView('view-portal')" class="text-xs text-slate-500">Volver</button>
   </section>
 
-  <!-- TARJETA DEL CLIENTE -->
   <section id="view-client-card" class="hidden w-full max-w-sm flex flex-col items-center gap-5 my-auto">
     <header class="w-full flex justify-between px-1">
       <div class="flex items-center gap-2">
@@ -211,27 +207,31 @@
       if (viewId !== 'view-client-card' && syncIntervalId) clearInterval(syncIntervalId);
     }
 
-    // CONEXIÓN MAESTRA A ONESIGNAL
-    function connectToOneSignal() {
-      window.OneSignalDeferred.push(function(OneSignal) {
-        if (currentCustomer) OneSignal.login(currentCustomer.uid);
-        OneSignal.User.PushSubscription.optIn();
-      });
-    }
-
-    // PEDIR PERMISO NATIVO LIMPIO
+    // EL SISTEMA INFALIBLE DE DIAGNÓSTICO
     function forceNotificationPrompt() {
-      if (!("Notification" in window)) {
-        alert("Tu navegador no soporta notificaciones nativas.");
-        return;
-      }
-      
       Notification.requestPermission().then(permission => {
         if (permission === "granted") {
-          connectToOneSignal();
-          alert("¡Suscripción confirmada en la Nube!");
+          window.OneSignalDeferred.push(async function(OneSignal) {
+            try {
+              if (currentCustomer) await OneSignal.login(currentCustomer.uid);
+              await OneSignal.User.PushSubscription.optIn();
+              
+              alert("Validando conexión con OneSignal... Espera 3 segundos.");
+              
+              setTimeout(() => {
+                const subId = OneSignal.User.PushSubscription.id;
+                if (subId) {
+                  alert("✅ ¡CONEXIÓN 100% EXITOSA! OneSignal registró tu celular con el ID: " + subId.substring(0,8) + "...");
+                } else {
+                  alert("❌ ERROR DE SERVIDOR DE ONESIGNAL:\n\nTu navegador dio permiso, pero OneSignal rechazó la conexión silenciosamente.\n\nCAUSAS:\n1. Estás en un iPhone con Brave/Chrome (Debes usar Safari y Añadir a la Pantalla de Inicio).\n2. El enlace configurado en el panel Web Push de OneSignal no es idéntico a la página que estás visitando (ej. falta el https://).\n3. Tienes un escudo estricto prendido.");
+                }
+              }, 3000);
+            } catch (err) {
+              alert("Error al ejecutar OneSignal: " + err);
+            }
+          });
         } else {
-          alert("Permiso Denegado. Actívalo en el candado de la barra de arriba.");
+          alert("Permiso Denegado por tu navegador. Dale a 'Permitir' en la barra de direcciones.");
         }
       });
     }
@@ -242,11 +242,6 @@
         currentCustomer = JSON.parse(saved);
         renderCustomerCard();
         startCloudSync();
-        
-        // Si ya hay permiso, conecta silenciosamente
-        if ("Notification" in window && Notification.permission === "granted") {
-           connectToOneSignal();
-        }
       } else {
         showView('view-register');
       }
@@ -259,8 +254,6 @@
 
       const name = document.getElementById('reg-name').value.trim();
       const rawPhone = document.getElementById('reg-phone').value.trim();
-      if(rawPhone.length !== 10) { alert("El número debe tener 10 dígitos"); btn.disabled = false; btn.innerText = "Ingresar"; return; }
-      
       const secureUid = 'ID-' + btoa(rawPhone).replace(/=/g, '').toUpperCase().substring(0, 16);
 
       try {
@@ -275,14 +268,6 @@
         localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
         renderCustomerCard();
         startCloudSync();
-        
-        // Pide permisos nativos limpios al registrarse
-        if ("Notification" in window && Notification.permission === "default") {
-          forceNotificationPrompt();
-        } else if (Notification.permission === "granted") {
-          connectToOneSignal();
-        }
-
       } catch(e) { alert("Fallo de red."); } 
       finally { btn.innerText = "Ingresar al Club"; btn.disabled = false; }
     }
