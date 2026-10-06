@@ -13,7 +13,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
 
-  <!-- MOTOR DE ONESIGNAL -->
+  <!-- MOTOR DE ONESIGNAL CORREGIDO (V16) -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -90,7 +90,7 @@
           <h2 class="text-xl font-extrabold text-white" id="client-name-display">Nombre</h2>
           <p class="text-[11px] text-slate-400 font-mono" id="client-phone-display">Teléfono</p>
         </div>
-        <button onclick="forceNotificationPrompt()" class="bg-blue-500/20 border border-blue-500/50 text-blue-400 p-2 rounded-xl text-xl active:scale-95" title="Activar Alertas">🔔</button>
+        <button onclick="forceNotificationPrompt()" class="bg-blue-500/20 border border-blue-500/50 text-blue-400 p-2 rounded-xl text-xl active:scale-95" title="Conectar Alertas">🔔</button>
       </div>
 
       <div>
@@ -106,8 +106,6 @@
       <div class="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col items-center">
         <div class="bg-white p-3 rounded-xl" id="qrcode-target"></div>
         <span class="text-[10px] font-tech text-slate-300 font-bold mt-3 uppercase text-center">Escanear QR en caja</span>
-        
-        <!-- ESTA ES LA LÍNEA DEL UID QUE RECUPERAMOS -->
         <span class="text-[10px] font-mono text-slate-400 mt-2 truncate w-48 text-center bg-black/50 px-2 py-1 rounded" id="client-uid-tag">UID: ---</span>
       </div>
     </main>
@@ -174,6 +172,12 @@
         <button onclick="applyStampWorker()" id="btn-add-stamp" class="flex-1 bg-white text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl active:scale-95">+ Sellar</button>
         <button onclick="redeemRewardWorker()" class="bg-slate-800 text-slate-200 font-tech font-bold text-xs uppercase px-4 py-3.5 rounded-xl border border-white/10 active:scale-95">Canjear</button>
       </div>
+      <div class="border-t border-white/10 pt-4 mt-2 flex flex-col gap-2">
+        <span class="text-[9px] font-tech text-slate-400 uppercase">Mensaje Directo a este Cliente</span>
+        <input type="text" id="target-push-title" placeholder="Título" class="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
+        <input type="text" id="target-push-body" placeholder="Mensaje" class="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
+        <button onclick="sendPushDirect()" class="w-full bg-white/10 text-white font-tech text-xs uppercase py-2.5 rounded-lg border border-white/10 active:scale-95 mt-1">Notificar a su Celular</button>
+      </div>
     </div>
   </section>
 
@@ -211,11 +215,7 @@
         currentCustomer = JSON.parse(saved);
         renderCustomerCard();
         startCloudSync();
-        
-        // Verifica si ya se tienen permisos; si sí, lo enlazamos en silencio a OneSignal
-        if (Notification.permission === "granted") {
-           window.OneSignalDeferred.push(function(OneSignal) { OneSignal.login(currentCustomer.uid); });
-        }
+        forceNotificationPrompt(); // Intenta registrar al instante
       } else {
         showView('view-register');
       }
@@ -248,14 +248,7 @@
         localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
         renderCustomerCard();
         startCloudSync();
-        
-        // Dispara la campana nativa al registrarse
-        if (Notification.permission === "default") {
-          forceNotificationPrompt();
-        } else if (Notification.permission === "granted") {
-          window.OneSignalDeferred.push(function(OneSignal) { OneSignal.login(currentCustomer.uid); });
-        }
-
+        forceNotificationPrompt(); // Conecta con OneSignal
       } catch(e) { alert("Fallo de red."); } 
       finally { btn.innerText = "Ingresar al Club"; btn.disabled = false; }
     }
@@ -281,22 +274,13 @@
       new QRCode(document.getElementById('qrcode-target'), { text: qrPayload, width: 150, height: 150, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.L });
     }
 
-    // EL ATAQUE NATIVO AL SISTEMA (Evita el escudo de Brave/Chrome)
+    // EL CÓDIGO CORREGIDO PARA ONESIGNAL
     function forceNotificationPrompt() {
-      if (!("Notification" in window)) {
-        alert("Tu navegador no soporta notificaciones.");
-        return;
-      }
-
-      Notification.requestPermission().then(permission => {
-        if (permission === "granted") {
-          window.OneSignalDeferred.push(async function(OneSignal) {
-            if(currentCustomer) await OneSignal.login(currentCustomer.uid);
-          });
-          alert("¡Notificaciones activadas con éxito! Ahora recibirás las alertas oficiales.");
-        } else {
-          alert("Permiso Denegado. Ve al candadito en la barra de arriba (junto a la dirección web), busca Notificaciones y dale a 'Permitir'.");
-        }
+      window.OneSignalDeferred.push(async function(OneSignal) {
+        // 1. Identifica al cliente en la base de datos de OneSignal
+        if (currentCustomer) await OneSignal.login(currentCustomer.uid);
+        // 2. Le pide a OneSignal (y no al navegador) que active el permiso y guarde la conexión
+        await OneSignal.Notifications.requestPermission();
       });
     }
 
@@ -364,7 +348,7 @@
       try {
         const res = await fetch(`/api/sync?uid=${uid}&nocache=${Date.now()}`);
         if (res.ok) { targetCustomer = (await res.json()).customer; } else throw new Error("No existe");
-      } catch(e) { return alert("Cliente no registrado en la base de datos."); }
+      } catch(e) { return alert("Cliente no registrado."); }
       showView('view-staff-action');
       document.getElementById('scanned-client-name').innerText = targetCustomer.name;
       document.getElementById('scanned-client-phone').innerText = targetCustomer.phone || "---";
@@ -388,14 +372,21 @@
       alert("Canjeado.");
     }
 
+    function sendPushDirect() {
+      if (!targetCustomer) return;
+      const title = document.getElementById('target-push-title').value;
+      const body = document.getElementById('target-push-body').value;
+      if (!title || !body) return alert("Llena todo");
+      fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uid: targetCustomer.uid, action: 'SEND_NOTIFICATION', notification: { title, body } }) })
+      .then(res => { if(res.ok) { alert("¡Notificación enviada!"); document.getElementById('target-push-title').value = ''; document.getElementById('target-push-body').value = ''; } });
+    }
+
     function sendBroadcast() {
       const title = document.getElementById('broadcast-title').value;
       const body = document.getElementById('broadcast-body').value;
       if (!title || !body) return alert("Llena todo.");
       fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'BROADCAST', notification: { title, body } }) })
-      .then(res => {
-        if(res.ok) { alert("¡Alerta Push Masiva Enviada a Todos!"); showView('view-staff-menu'); }
-      });
+      .then(res => { if(res.ok) { alert("¡Alerta Push Masiva Enviada!"); showView('view-staff-menu'); } });
     }
 
     window.onload = () => { if(localStorage.getItem('aura_customer_profile')) goToClientPortal(); };
