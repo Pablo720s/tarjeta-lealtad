@@ -6,17 +6,13 @@ export async function onRequestGet(context) {
     return new Response(JSON.stringify({ error: "UID requerido" }), { status: 400 });
   }
 
-  // Busca los datos del cliente y el buzón global de notificaciones
   const customerRaw = await context.env.AURA_KV.get(uid);
-  const globalNotifRaw = await context.env.AURA_KV.get('AURA_GLOBAL_NOTIF');
-
   if (!customerRaw) {
     return new Response(JSON.stringify({ error: "Cliente no registrado" }), { status: 404 });
   }
 
   return new Response(JSON.stringify({
-    customer: JSON.parse(customerRaw),
-    globalNotification: globalNotifRaw ? JSON.parse(globalNotifRaw) : null
+    customer: JSON.parse(customerRaw)
   }), {
     headers: { "Content-Type": "application/json" }
   });
@@ -26,15 +22,20 @@ export async function onRequestPost(context) {
   try {
     const body = await context.request.json();
     const { uid, action, customerData, notification } = body;
+    const APP_ID = "d58ea2fb-a340-4669-9e14-f8baaf7cba74";
+    const API_KEY = "342iey2k3ugznnjys3rgmjyrw";
 
-    // Disparador de Notificación Global (A todos los clientes)
     if (action === "BROADCAST") {
-      const globalData = {
-        title: notification.title,
-        body: notification.body,
-        id: Date.now()
-      };
-      await context.env.AURA_KV.put('AURA_GLOBAL_NOTIF', JSON.stringify(globalData));
+      await fetch("https://onesignal.com/api/v1/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Basic " + API_KEY },
+        body: JSON.stringify({
+          app_id: APP_ID,
+          included_segments: ["Subscribed Users"],
+          headings: { en: notification.title, es: notification.title },
+          contents: { en: notification.body, es: notification.body }
+        })
+      });
       return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } });
     }
 
@@ -54,11 +55,17 @@ export async function onRequestPost(context) {
     } else if (action === "REDEEM") {
       customer.stamps = 0;
     } else if (action === "SEND_NOTIFICATION") {
-      customer.pendingNotification = {
-        title: notification.title,
-        body: notification.body,
-        id: Date.now()
-      };
+      await fetch("https://onesignal.com/api/v1/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Basic " + API_KEY },
+        body: JSON.stringify({
+          app_id: APP_ID,
+          include_aliases: { external_id: [uid] },
+          target_channel: "push",
+          headings: { en: notification.title, es: notification.title },
+          contents: { en: notification.body, es: notification.body }
+        })
+      });
     }
 
     await context.env.AURA_KV.put(uid, JSON.stringify(customer));
