@@ -13,14 +13,12 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
 
-  <!-- MOTOR DE ONESIGNAL (CORRECCIÓN Qe) -->
+  <!-- MOTOR DE ONESIGNAL CORREGIDO Y ESTABLE -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
-    window.OneSignalDeferred.push(async function(OneSignal) {
-      await OneSignal.init({
-        appId: "d58ea2fb-a340-4669-9e14-f8baaf7cba74"
-      });
+    window.OneSignalDeferred.push(function(OneSignal) {
+      OneSignal.init({ appId: "d58ea2fb-a340-4669-9e14-f8baaf7cba74" });
     });
   </script>
 
@@ -35,9 +33,23 @@
     .stamp-filled { background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 100%); border: 1px solid rgba(255,255,255,0.45); box-shadow: 0 0 15px rgba(255,255,255,0.1); }
     .stamp-empty { background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.12); }
     #scanner-video video { border-radius: 1.25rem; object-fit: cover; }
+    #in-app-notification { transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
   </style>
 </head>
 <body class="bg-[#050608] text-slate-100 min-h-screen flex flex-col items-center justify-between p-4">
+
+  <!-- ALERTA IN-APP DE RESPALDO INFALIBLE -->
+  <div id="in-app-notification" class="fixed top-[-100%] left-0 w-full px-4 z-50 pt-4 flex justify-center">
+    <div class="bg-cyan-500 text-white w-full max-w-sm rounded-2xl p-4 shadow-[0_10px_40px_rgba(6,182,212,0.5)] border border-cyan-400 flex flex-col gap-1 cursor-pointer" onclick="closeInAppNotification()">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">🔔</span>
+        <span class="text-[10px] font-tech uppercase tracking-widest font-bold text-cyan-100">Mensaje del Negocio</span>
+      </div>
+      <h3 id="in-app-title" class="font-bold text-lg mt-1">Título</h3>
+      <p id="in-app-body" class="text-sm opacity-90">Mensaje</p>
+      <p class="text-[9px] text-cyan-200 mt-2 text-center uppercase tracking-wider">Toca para cerrar</p>
+    </div>
+  </div>
 
   <section id="view-portal" class="w-full max-w-sm my-auto flex flex-col gap-6">
     <div class="text-center">
@@ -90,7 +102,7 @@
           <h2 class="text-xl font-extrabold text-white" id="client-name-display">Nombre</h2>
           <p class="text-[11px] text-slate-400 font-mono" id="client-phone-display">Teléfono</p>
         </div>
-        <button onclick="forceNotificationPrompt()" class="bg-blue-500/20 border border-blue-500/50 text-blue-400 p-2 rounded-xl text-xl active:scale-95" title="Conectar Alertas">🔔</button>
+        <button onclick="activatePush()" class="bg-blue-500/20 border border-blue-500/50 text-blue-400 p-2 rounded-xl text-xl active:scale-95" title="Conectar Alertas">🔔</button>
       </div>
 
       <div>
@@ -111,6 +123,7 @@
     </main>
   </section>
 
+  <!-- MÓDULOS DEL TRABAJADOR -->
   <section id="view-staff-menu" class="hidden w-full max-w-sm my-auto flex flex-col gap-4">
     <header class="flex justify-between px-1 mb-2">
       <span class="text-[10px] font-tech text-emerald-400 uppercase font-semibold">Terminal Activa</span>
@@ -208,16 +221,31 @@
       if (viewId !== 'view-client-card' && syncIntervalId) clearInterval(syncIntervalId);
     }
 
-    function forceNotificationPrompt() {
-      window.OneSignalDeferred.push(async function(OneSignal) {
-        try {
-          if (currentCustomer) {
-            await OneSignal.login(currentCustomer.uid);
-          }
-          await OneSignal.Slidedown.promptPush({ force: true });
-        } catch (error) {
-          alert("Error de compatibilidad con el navegador al conectar con los servidores.");
+    function closeInAppNotification() {
+      document.getElementById('in-app-notification').style.top = '-100%';
+    }
+
+    function triggerFallbackNotification(title, body) {
+      if(navigator.vibrate) navigator.vibrate([200,100,200]);
+      
+      if ("Notification" in window && Notification.permission === "granted") {
+        navigator.serviceWorker.getRegistration().then(reg => {
+          if (reg) { reg.showNotification(title, { body: body, icon: '/icon-192.png' }); }
+          else { new Notification(title, { body: body, icon: '/icon-192.png' }); }
+        }).catch(() => { new Notification(title, { body: body, icon: '/icon-192.png' }); });
+      } else {
+        document.getElementById('in-app-title').innerText = title;
+        document.getElementById('in-app-body').innerText = body;
+        document.getElementById('in-app-notification').style.top = '10px';
+      }
+    }
+
+    function activatePush() {
+      window.OneSignalDeferred.push(function(OneSignal) {
+        if (currentCustomer) {
+          OneSignal.login(currentCustomer.uid);
         }
+        OneSignal.Slidedown.promptPush();
       });
     }
 
@@ -227,9 +255,7 @@
         currentCustomer = JSON.parse(saved);
         renderCustomerCard();
         startCloudSync();
-        window.OneSignalDeferred.push(async function(OneSignal) {
-          await OneSignal.login(currentCustomer.uid);
-        });
+        activatePush();
       } else {
         showView('view-register');
       }
@@ -258,7 +284,7 @@
         localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
         renderCustomerCard();
         startCloudSync();
-        forceNotificationPrompt();
+        activatePush();
       } catch(e) { alert("Fallo de red."); }
       finally { btn.innerText = "Ingresar al Club"; btn.disabled = false; }
     }
@@ -294,11 +320,25 @@
             document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
             document.getElementById('cloud-status-text').innerText = "Nube OK";
             const data = await res.json();
-            if (data.customer.stamps !== undefined && data.customer.stamps !== currentCustomer.stamps) {
-              currentCustomer.stamps = data.customer.stamps;
+            const cloudCustomer = data.customer;
+            
+            if (cloudCustomer.stamps !== undefined && cloudCustomer.stamps !== currentCustomer.stamps) {
+              currentCustomer.stamps = cloudCustomer.stamps;
               localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
               if(navigator.vibrate) navigator.vibrate([100,50]);
               renderCustomerCard();
+            }
+
+            const savedPrivId = localStorage.getItem('aura_notif_priv');
+            if (cloudCustomer.pendingNotification && String(cloudCustomer.pendingNotification.id) !== savedPrivId) {
+              localStorage.setItem('aura_notif_priv', String(cloudCustomer.pendingNotification.id));
+              triggerFallbackNotification(cloudCustomer.pendingNotification.title, cloudCustomer.pendingNotification.body);
+            }
+
+            const savedGlobId = localStorage.getItem('aura_notif_glob');
+            if (data.globalNotification && String(data.globalNotification.id) !== savedGlobId) {
+              localStorage.setItem('aura_notif_glob', String(data.globalNotification.id));
+              triggerFallbackNotification(data.globalNotification.title, data.globalNotification.body);
             }
           }
         } catch (e) {}
@@ -377,7 +417,7 @@
       const title = document.getElementById('target-push-title').value;
       const body = document.getElementById('target-push-body').value;
       if (!title || !body) return alert("Llena todo");
-      fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uid: targetCustomer.uid, action: 'SEND_NOTIFICATION', notification: { title, body } }) })
+      fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uid: targetCustomer.uid, action: 'SEND_NOTIFICATION', notification: { title, body, id: Date.now() } }) })
       .then(res => { if(res.ok) { alert("¡Notificación enviada!"); document.getElementById('target-push-title').value = ''; document.getElementById('target-push-body').value = ''; } });
     }
 
@@ -385,7 +425,7 @@
       const title = document.getElementById('broadcast-title').value;
       const body = document.getElementById('broadcast-body').value;
       if (!title || !body) return alert("Llena todo.");
-      fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'BROADCAST', notification: { title, body } }) })
+      fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'BROADCAST', notification: { title, body, id: Date.now() } }) })
       .then(res => { if(res.ok) { alert("¡Alerta Push Masiva Enviada!"); showView('view-staff-menu'); } });
     }
 
