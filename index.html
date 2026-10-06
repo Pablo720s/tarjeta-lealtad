@@ -13,12 +13,20 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
 
+  <!-- MOTOR ONESIGNAL VERSIÓN 16 CON CAMPANITA -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
       await OneSignal.init({
         appId: "d58ea2fb-a340-4669-9e14-f8baaf7cba74",
+        notifyButton: {
+          enable: true, /* Activa la campana flotante en la esquina */
+          colors: {
+            'circle.background': '#10B981', /* Verde esmeralda para que combine */
+            'circle.foreground': 'white',
+          }
+        }
       });
     });
   </script>
@@ -324,11 +332,18 @@
       });
     }
 
+    // FORZADO DE PERMISOS NATIVOS
     function requestNotificationAccess() {
       window.OneSignalDeferred = window.OneSignalDeferred || [];
-      OneSignalDeferred.push(function(OneSignal) {
-        OneSignal.login(currentCustomer.uid);
-        OneSignal.Slidedown.promptPush();
+      OneSignalDeferred.push(async function(OneSignal) {
+        try {
+          // Asocia el celular con el UID del cliente en OneSignal
+          await OneSignal.login(currentCustomer.uid);
+          // Obliga a que salga la ventanita nativa del navegador
+          await OneSignal.Notifications.requestPermission();
+        } catch(e) {
+          console.error(e);
+        }
       });
     }
 
