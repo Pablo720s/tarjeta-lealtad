@@ -18,6 +18,12 @@
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     window.OneSignalDeferred.push(function(OneSignal) {
       OneSignal.init({ appId: "d58ea2fb-a340-4669-9e14-f8baaf7cba74" });
+      
+      OneSignal.User.PushSubscription.addEventListener("change", function(event) {
+        if (event.current.optedIn) {
+          alert("✅ CONEXIÓN EXITOSA: OneSignal acaba de registrar tu dispositivo en la nube.");
+        }
+      });
     });
   </script>
 
@@ -224,36 +230,17 @@
 
     function triggerFallbackNotification(title, body) {
       if(navigator.vibrate) navigator.vibrate([200,100,200]);
-      
-      if ("Notification" in window && Notification.permission === "granted") {
-        navigator.serviceWorker.getRegistration().then(reg => {
-          if (reg) { reg.showNotification(title, { body: body, icon: '/icon-192.png' }); }
-          else { new Notification(title, { body: body, icon: '/icon-192.png' }); }
-        }).catch(() => { new Notification(title, { body: body, icon: '/icon-192.png' }); });
-      } else {
-        document.getElementById('in-app-title').innerText = title;
-        document.getElementById('in-app-body').innerText = body;
-        document.getElementById('in-app-notification').style.top = '10px';
-      }
+      document.getElementById('in-app-title').innerText = title;
+      document.getElementById('in-app-body').innerText = body;
+      document.getElementById('in-app-notification').style.top = '10px';
     }
 
     function activatePush() {
-      if (!("Notification" in window)) {
-        alert("Este dispositivo no soporta alertas nativas.");
-        return;
-      }
-      
-      Notification.requestPermission().then(permission => {
-        if (permission === "granted") {
-          alert("¡Alertas activadas correctamente en tu dispositivo!");
-          try {
-            window.OneSignalDeferred.push(function(OneSignal) {
-              if (currentCustomer) OneSignal.login(currentCustomer.uid);
-            });
-          } catch(e) {}
-        } else {
-          alert("Permiso denegado por el navegador. Toca el candado en la barra superior para permitir las notificaciones manualmente.");
+      window.OneSignalDeferred.push(async function(OneSignal) {
+        if (currentCustomer) {
+          await OneSignal.login(currentCustomer.uid);
         }
+        await OneSignal.Slidedown.promptPush({ force: true });
       });
     }
 
@@ -291,10 +278,6 @@
         localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
         renderCustomerCard();
         startCloudSync();
-        
-        if ("Notification" in window && Notification.permission === "default") {
-          activatePush();
-        }
       } catch(e) { alert("Fallo de red."); }
       finally { btn.innerText = "Ingresar al Club"; btn.disabled = false; }
     }
