@@ -17,10 +17,9 @@
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     window.OneSignalDeferred.push(async function(OneSignal) {
+      // Al no poner 'serviceWorkerPath', OneSignal buscará OneSignalSDKWorker.js automáticamente
       await OneSignal.init({ 
-        appId: "d58ea2fb-a340-4669-9e14-f8baaf7cba74",
-        serviceWorkerParam: { scope: "/" },
-        serviceWorkerPath: "sw.js"
+        appId: "d58ea2fb-a340-4669-9e14-f8baaf7cba74"
       });
       
       OneSignal.User.PushSubscription.addEventListener("change", function(event) {
@@ -258,7 +257,7 @@
         currentCustomer = JSON.parse(saved);
         renderCustomerCard();
         startCloudSync();
-        activatePush();
+        activatePush(); // Llama la solicitud de permisos si ya tenía sesión guardada
       } else {
         showView('view-register');
       }
@@ -287,7 +286,7 @@
         localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
         renderCustomerCard();
         startCloudSync();
-        activatePush();
+        activatePush(); // Llama la solicitud de permisos justo al registrarse
       } catch(e) { alert("Fallo de red."); }
       finally { btn.innerText = "Ingresar al Club"; btn.disabled = false; }
     }
