@@ -13,11 +13,15 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
 
-  <script src="/OneSignalSDK.page.js" defer></script>
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
-    window.OneSignalDeferred.push(function(OneSignal) {
-      OneSignal.init({ appId: "d58ea2fb-a340-4669-9e14-f8baaf7cba74" });
+    window.OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({ 
+        appId: "d58ea2fb-a340-4669-9e14-f8baaf7cba74",
+        serviceWorkerParam: { scope: "/" },
+        serviceWorkerPath: "sw.js"
+      });
       
       OneSignal.User.PushSubscription.addEventListener("change", function(event) {
         if (event.current.optedIn) {
@@ -236,19 +240,11 @@
     }
 
     function activatePush() {
-      if (typeof window.OneSignalDeferred === 'undefined') {
-        alert("El navegador bloqueó la conexión a OneSignal. Si usas Brave o un bloqueador de anuncios, baja los escudos temporalmente para habilitar las notificaciones.");
-        return;
-      }
       window.OneSignalDeferred.push(async function(OneSignal) {
-        try {
-          if (currentCustomer) {
-            await OneSignal.login(currentCustomer.uid);
-          }
-          await OneSignal.Notifications.requestPermission();
-        } catch(e) {
-          console.error("Error solicitando permisos:", e);
+        if (currentCustomer && currentCustomer.uid) {
+          await OneSignal.login(currentCustomer.uid);
         }
+        await OneSignal.Slidedown.promptPush({ force: true });
       });
     }
 
