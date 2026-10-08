@@ -110,7 +110,7 @@
           <h2 class="text-xl font-extrabold text-white" id="client-name-display">Nombre</h2>
           <p class="text-[11px] text-slate-400 font-mono" id="client-phone-display">Teléfono</p>
         </div>
-        <button onclick="activatePush()" class="bg-blue-500/20 border border-blue-500/50 text-blue-400 p-2 rounded-xl text-xl active:scale-95" title="Conectar Alertas">🔔</button>
+        <button onclick="activatePush(true)" class="bg-blue-500/20 border border-blue-500/50 text-blue-400 p-2 rounded-xl text-xl active:scale-95" title="Conectar Alertas">🔔</button>
       </div>
 
       <div>
@@ -239,12 +239,16 @@
       document.getElementById('in-app-notification').style.top = '10px';
     }
 
-    function activatePush() {
+    function activatePush(forcePrompt = false) {
       window.OneSignalDeferred.push(async function(OneSignal) {
         if (currentCustomer && currentCustomer.uid) {
           await OneSignal.login(currentCustomer.uid);
         }
-        await OneSignal.Slidedown.promptPush({ force: true });
+        if (forcePrompt) {
+          await OneSignal.Slidedown.promptPush({ force: true });
+        } else {
+          await OneSignal.Slidedown.promptPush();
+        }
       });
     }
 
@@ -254,6 +258,7 @@
         currentCustomer = JSON.parse(saved);
         renderCustomerCard();
         startCloudSync();
+        activatePush();
       } else {
         showView('view-register');
       }
@@ -282,6 +287,7 @@
         localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
         renderCustomerCard();
         startCloudSync();
+        activatePush();
       } catch(e) { alert("Fallo de red."); }
       finally { btn.innerText = "Ingresar al Club"; btn.disabled = false; }
     }
