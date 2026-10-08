@@ -13,7 +13,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
 
-  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script src="/OneSignalSDK.page.js" defer></script>
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     window.OneSignalDeferred.push(function(OneSignal) {
@@ -236,11 +236,19 @@
     }
 
     function activatePush() {
+      if (typeof window.OneSignalDeferred === 'undefined') {
+        alert("El navegador bloqueó la conexión a OneSignal. Si usas Brave o un bloqueador de anuncios, baja los escudos temporalmente para habilitar las notificaciones.");
+        return;
+      }
       window.OneSignalDeferred.push(async function(OneSignal) {
-        if (currentCustomer) {
-          await OneSignal.login(currentCustomer.uid);
+        try {
+          if (currentCustomer) {
+            await OneSignal.login(currentCustomer.uid);
+          }
+          await OneSignal.Notifications.requestPermission();
+        } catch(e) {
+          console.error("Error solicitando permisos:", e);
         }
-        await OneSignal.Slidedown.promptPush({ force: true });
       });
     }
 
@@ -426,4 +434,3 @@
   </script>
 </body>
 </html>
- 
