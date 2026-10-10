@@ -177,6 +177,7 @@
         <span class="text-[9px] font-tech text-slate-400 uppercase">Mensaje Directo (Web Push)</span>
         <input type="text" id="target-push-title" placeholder="Título" class="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
         <input type="text" id="target-push-body" placeholder="Mensaje" class="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
+        <input type="text" id="target-push-image" placeholder="URL de imagen promocional (Opcional)" class="w-full bg-black/50 border border-emerald-500/30 rounded-lg px-3 py-2 text-xs text-white focus:outline-none mt-1">
         <button onclick="sendPushDirect()" class="w-full bg-white/10 text-white font-tech text-xs uppercase py-2.5 rounded-lg border border-white/10 active:scale-95 mt-1">Disparar Alerta a su Celular</button>
       </div>
     </div>
@@ -190,6 +191,7 @@
     <div class="titanium-card p-6 rounded-3xl flex flex-col gap-4">
       <input type="text" id="broadcast-title" placeholder="Ej. ¡Hoy 2x1 en bebidas!" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none">
       <textarea id="broadcast-body" placeholder="Describe la promoción..." rows="3" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none"></textarea>
+      <input type="text" id="broadcast-image" placeholder="URL de imagen promocional (Opcional)" class="w-full bg-black/60 border border-emerald-500/30 rounded-xl px-4 py-3 text-sm text-white focus:outline-none">
       <button onclick="sendBroadcast()" class="w-full bg-emerald-500 text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl active:scale-95">Disparar a Todos los Clientes</button>
     </div>
   </section>
@@ -417,21 +419,26 @@
       if (!targetCustomer) return;
       const title = document.getElementById('target-push-title').value;
       const body = document.getElementById('target-push-body').value;
-      if (!title || !body) return alert("Llena todo");
+      const image = document.getElementById('target-push-image').value.trim();
+      
+      if (!title || !body) return alert("Llena título y mensaje");
+      
+      const notification = { title, body };
+      if (image) notification.image = image; // Agregamos la imagen solo si el trabajador llenó el campo
       
       document.getElementById('target-push-title').value = 'Enviando...';
       
       fetch('/api/sync', { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ uid: targetCustomer.uid, action: 'SEND_NOTIFICATION', notification: { title, body } }) 
+        body: JSON.stringify({ uid: targetCustomer.uid, action: 'SEND_NOTIFICATION', notification }) 
       })
       .then(res => res.json())
       .then(data => { 
-        // ALERTA DE DIAGNÓSTICO: Esto nos dirá si Apple/Google rechazaron las llaves o la aceptaron.
         alert("Resultado del Servidor Nativo:\n\n" + data.pushEndpointResponse); 
         document.getElementById('target-push-title').value = ''; 
         document.getElementById('target-push-body').value = ''; 
+        document.getElementById('target-push-image').value = '';
       })
       .catch(err => { alert("Error de red: " + err); });
     }
@@ -439,9 +446,23 @@
     function sendBroadcast() {
       const title = document.getElementById('broadcast-title').value;
       const body = document.getElementById('broadcast-body').value;
-      if (!title || !body) return alert("Llena todo.");
-      fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'BROADCAST', notification: { title, body } }) })
-      .then(res => { if(res.ok) { alert("¡Alerta Masiva Disparada!"); showView('view-staff-menu'); } });
+      const image = document.getElementById('broadcast-image').value.trim();
+      
+      if (!title || !body) return alert("Llena título y mensaje");
+      
+      const notification = { title, body };
+      if (image) notification.image = image; // Agregamos la imagen al mensaje masivo
+      
+      fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'BROADCAST', notification }) })
+      .then(res => { 
+        if(res.ok) { 
+          alert("¡Alerta Masiva Disparada!"); 
+          showView('view-staff-menu'); 
+          document.getElementById('broadcast-title').value = ''; 
+          document.getElementById('broadcast-body').value = ''; 
+          document.getElementById('broadcast-image').value = ''; 
+        } 
+      });
     }
 
     window.onload = () => { if(localStorage.getItem('aura_customer_profile')) goToClientPortal(); };
