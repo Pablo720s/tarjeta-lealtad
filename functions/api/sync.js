@@ -1,79 +1,96 @@
-export async function onRequestGet(context) {
-  const { searchParams } = new URL(context.request.url);
-  const uid = searchParams.get('uid');
+import { SignJWT, importPKCS8 } from 'https://esm.sh/jose@5.2.3';
 
-  if (!uid) {
-    return new Response(JSON.stringify({ error: "UID requerido" }), { status: 400 });
+// === TUS LLAVES VAPID AQUÍ ===
+const VAPID_PUBLIC = "BAnT5bbpr4oahQev16GudpIJUpg0_3Kgz20jGLFnBsFeK6-_72MtBXvK3M-BruCeTXNWYWEspRrfrUONCJ2OpGM";
+const VAPID_PRIVATE = "YldH1B9DXb5taKwGykHO31HSPbWihtA7TQoUdedDDgQ";
+const CONTACT_EMAIL = "mailto:admin@tu-dominio.com";
+
+export async function onRequest(context) {
+  const { request, env } = context;
+  const url = new URL(request.url);
+  const action = url.searchParams.get('action');
+  const uid = url.searchParams.get('uid');
+
+  // --- SOLICITUDES GET (Leer datos) ---
+  if (request.method === 'GET') {
+    // Cuando el teléfono despierta, pide el mensaje pendiente
+    if (action === 'GET_PENDING' && uid) {
+      let notif = await env.PUSH_KV.get(`PENDING_${uid}`, { type: 'json' });
+      if (notif) {
+        await env.PUSH_KV.delete(`PENDING_${uid}`); // Lo borramos para no repetirlo
+      } else {
+        notif = await env.PUSH_KV.get(`PENDING_GLOBAL`, { type: 'json' }); // Busca si hay uno masivo
+      }
+      return new Response(JSON.stringify(notif || {}), { headers: { 'Content-Type': 'application/json' } });
+    }
+    
+    // Leer perfil del cliente
+    if (uid) {
+      const customer = await env.PUSH_KV.get(`USER_${uid}`, { type: 'json' });
+      if (customer) return new Response(JSON.stringify({ customer }), { headers: { 'Content-Type': 'application/json' } });
+      return new Response("No encontrado", { status: 404 });
+    }
+    return new Response("Invalid GET", { status: 400 });
   }
 
-  const customerRaw = await context.env.AURA_KV.get(uid);
-  if (!customerRaw) {
-    return new Response(JSON.stringify({ error: "Cliente no registrado" }), { status: 404 });
-  }
+  // --- SOLICITUDES POST (Guardar datos y enviar alertas) ---
+  if (request.method === 'POST') {
+    const body = await request.json();
+    const reqAction = body.action;
 
-  return new Response(JSON.stringify({
-    customer: JSON.parse(customerRaw)
-  }), {
-    headers: { "Content-Type": "application/json" }
-  });
+    if (reqAction === 'REGISTER') {
+      await env.PUSH_KV.put(`USER_${body.uid}`, JSON.stringify(body.customerData));
+      return new Response("OK");
+    }
+
+    if (reqAction === 'SUBSCRIBE') {
+      await env.PUSH_KV.put(`SUB_${body.uid}`, JSON.stringify(body.subscription));
+      return new Response("OK");
+    }
+
+    if (reqAction === 'SEND_NOTIFICATION') {
+      await env.PUSH_KV.put(`PENDING_${body.uid}`, JSON.stringify(body.notification));
+      const subRaw = await env.PUSH_KV.get(`SUB_${body.uid}`);
+      if (subRaw) await triggerPush(JSON.parse(subRaw), VAPID_PUBLIC, VAPID_PRIVATE);
+      return new Response("OK");
+    }
+
+    if (reqAction === 'BROADCAST') {
+      await env.PUSH_KV.put(`PENDING_GLOBAL`, JSON.stringify(body.notification));
+      const list = await env.PUSH_KV.list({ prefix: 'SUB_' });
+      for (const key of list.keys) {
+        const subRaw = await env.PUSH_KV.get(key.name);
+        if (subRaw) await triggerPush(JSON.parse(subRaw), VAPID_PUBLIC, VAPID_PRIVATE);
+      }
+      return new Response("OK");
+    }
+  }
+  return new Response("Bad Request", { status: 400 });
 }
 
-export async function onRequestPost(context) {
+// --- MAGIA CRIPTOGRÁFICA (VAPID) ---
+async function triggerPush(subscription, vapidPub, vapidPriv) {
   try {
-    const body = await context.request.json();
-    const { uid, action, customerData, notification } = body;
-    const APP_ID = "d58ea2fb-a340-4669-9e14-f8baaf7cba74";
-    const API_KEY = "342iey2k3ugznnjys3rgmjyrw";
+    // Truco hacker: Convertir la llave cruda de VAPID a formato PKCS#8 para WebCrypto
+    const rawHex = atob(vapidPriv.replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+    const prefix = "3041020100301306072a8648ce3d020106082a8648ce3d030107042730250201010420";
+    const pkcs8Bytes = new Uint8Array((prefix + rawHex).match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    const pem = `-----BEGIN PRIVATE KEY-----\n${btoa(String.fromCharCode(...pkcs8Bytes))}\n-----END PRIVATE KEY-----`;
+    
+    const privateKey = await importPKCS8(pem, 'ES256');
+    const origin = new URL(subscription.endpoint).origin;
 
-    if (action === "BROADCAST") {
-      await fetch("https://onesignal.com/api/v1/notifications", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Basic " + API_KEY },
-        body: JSON.stringify({
-          app_id: APP_ID,
-          included_segments: ["Subscribed Users"],
-          headings: { en: notification.title, es: notification.title },
-          contents: { en: notification.body, es: notification.body }
-        })
-      });
-      return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } });
-    }
+    const jwt = await new SignJWT({ aud: origin, sub: CONTACT_EMAIL })
+      .setProtectedHeader({ alg: 'ES256', typ: 'JWT' })
+      .setExpirationTime('12h')
+      .sign(privateKey);
 
-    if (!uid) return new Response(JSON.stringify({ error: "UID requerido" }), { status: 400 });
-
-    let record = await context.env.AURA_KV.get(uid);
-    let customer = record ? JSON.parse(record) : customerData;
-
-    if (!customer && action !== "REGISTER") {
-      return new Response(JSON.stringify({ error: "Cliente no existe" }), { status: 404 });
-    }
-
-    if (action === "REGISTER") {
-      customer = customerData;
-    } else if (action === "ADD_STAMP") {
-      if (customer.stamps < 6) customer.stamps = (customer.stamps || 0) + 1;
-    } else if (action === "REDEEM") {
-      customer.stamps = 0;
-    } else if (action === "SEND_NOTIFICATION") {
-      await fetch("https://onesignal.com/api/v1/notifications", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Basic " + API_KEY },
-        body: JSON.stringify({
-          app_id: APP_ID,
-          include_aliases: { external_id: [uid] },
-          target_channel: "push",
-          headings: { en: notification.title, es: notification.title },
-          contents: { en: notification.body, es: notification.body }
-        })
-      });
-    }
-
-    await context.env.AURA_KV.put(uid, JSON.stringify(customer));
-
-    return new Response(JSON.stringify(customer), {
-      headers: { "Content-Type": "application/json" }
+    await fetch(subscription.endpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `vapid t=${jwt}, k=${vapidPub}`,
+        'Content-Length': '0' // Disparo sin carga (Despierta el celular)
+      }
     });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
-  }
+  } catch (e) { console.error("Error Push:", e); }
 }
