@@ -1,9 +1,64 @@
-import { SignJWT, importPKCS8 } from 'https://esm.sh/jose@5.2.3';
-
 // === TUS LLAVES VAPID AQUÍ ===
 const VAPID_PUBLIC = "BAnT5bbpr4oahQev16GudpIJUpg0_3Kgz20jGLFnBsFeK6-_72MtBXvK3M-BruCeTXNWYWEspRrfrUONCJ2OpGM";
 const VAPID_PRIVATE = "YldH1B9DXb5taKwGykHO31HSPbWihtA7TQoUdedDDgQ";
 const CONTACT_EMAIL = "mailto:admin@tu-dominio.com";
+
+// --- MAGIA CRIPTOGRÁFICA 100% NATIVA (Sin librerías externas) ---
+function base64UrlEncode(str) {
+  return btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+function base64UrlEncodeBuffer(buffer) {
+  return btoa(String.fromCharCode(...new Uint8Array(buffer))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+async function createVapidJwt(aud, vapidPriv) {
+  const header = { alg: 'ES256', typ: 'JWT' };
+  const payload = {
+    aud: aud,
+    exp: Math.floor(Date.now() / 1000) + 12 * 60 * 60,
+    sub: CONTACT_EMAIL
+  };
+  
+  const encodedHeader = base64UrlEncode(JSON.stringify(header));
+  const encodedPayload = base64UrlEncode(JSON.stringify(payload));
+  const dataToSign = `${encodedHeader}.${encodedPayload}`;
+  
+  const rawHex = atob(vapidPriv.replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+  const prefix = "3041020100301306072a8648ce3d020106082a8648ce3d030107042730250201010420";
+  const pkcs8Bytes = new Uint8Array((prefix + rawHex).match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+  
+  const key = await crypto.subtle.importKey(
+    'pkcs8',
+    pkcs8Bytes,
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    false,
+    ['sign']
+  );
+  
+  const signature = await crypto.subtle.sign(
+    { name: 'ECDSA', hash: { name: 'SHA-256' } },
+    key,
+    new TextEncoder().encode(dataToSign)
+  );
+  
+  return `${dataToSign}.${base64UrlEncodeBuffer(signature)}`;
+}
+
+async function triggerPush(subscription, vapidPub, vapidPriv) {
+  try {
+    const origin = new URL(subscription.endpoint).origin;
+    const jwt = await createVapidJwt(origin, vapidPriv);
+
+    await fetch(subscription.endpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `vapid t=${jwt}, k=${vapidPub}`,
+        'Content-Length': '0'
+      }
+    });
+  } catch (e) { console.error("Error Push:", e); }
+}
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -11,20 +66,17 @@ export async function onRequest(context) {
   const action = url.searchParams.get('action');
   const uid = url.searchParams.get('uid');
 
-  // --- SOLICITUDES GET (Leer datos) ---
   if (request.method === 'GET') {
-    // Cuando el teléfono despierta, pide el mensaje pendiente
     if (action === 'GET_PENDING' && uid) {
       let notif = await env.PUSH_KV.get(`PENDING_${uid}`, { type: 'json' });
       if (notif) {
-        await env.PUSH_KV.delete(`PENDING_${uid}`); // Lo borramos para no repetirlo
+        await env.PUSH_KV.delete(`PENDING_${uid}`);
       } else {
-        notif = await env.PUSH_KV.get(`PENDING_GLOBAL`, { type: 'json' }); // Busca si hay uno masivo
+        notif = await env.PUSH_KV.get(`PENDING_GLOBAL`, { type: 'json' });
       }
       return new Response(JSON.stringify(notif || {}), { headers: { 'Content-Type': 'application/json' } });
     }
     
-    // Leer perfil del cliente
     if (uid) {
       const customer = await env.PUSH_KV.get(`USER_${uid}`, { type: 'json' });
       if (customer) return new Response(JSON.stringify({ customer }), { headers: { 'Content-Type': 'application/json' } });
@@ -33,7 +85,6 @@ export async function onRequest(context) {
     return new Response("Invalid GET", { status: 400 });
   }
 
-  // --- SOLICITUDES POST (Guardar datos y enviar alertas) ---
   if (request.method === 'POST') {
     const body = await request.json();
     const reqAction = body.action;
@@ -66,31 +117,4 @@ export async function onRequest(context) {
     }
   }
   return new Response("Bad Request", { status: 400 });
-}
-
-// --- MAGIA CRIPTOGRÁFICA (VAPID) ---
-async function triggerPush(subscription, vapidPub, vapidPriv) {
-  try {
-    // Truco hacker: Convertir la llave cruda de VAPID a formato PKCS#8 para WebCrypto
-    const rawHex = atob(vapidPriv.replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
-    const prefix = "3041020100301306072a8648ce3d020106082a8648ce3d030107042730250201010420";
-    const pkcs8Bytes = new Uint8Array((prefix + rawHex).match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-    const pem = `-----BEGIN PRIVATE KEY-----\n${btoa(String.fromCharCode(...pkcs8Bytes))}\n-----END PRIVATE KEY-----`;
-    
-    const privateKey = await importPKCS8(pem, 'ES256');
-    const origin = new URL(subscription.endpoint).origin;
-
-    const jwt = await new SignJWT({ aud: origin, sub: CONTACT_EMAIL })
-      .setProtectedHeader({ alg: 'ES256', typ: 'JWT' })
-      .setExpirationTime('12h')
-      .sign(privateKey);
-
-    await fetch(subscription.endpoint, {
-      method: 'POST',
-      headers: {
-        'Authorization': `vapid t=${jwt}, k=${vapidPub}`,
-        'Content-Length': '0' // Disparo sin carga (Despierta el celular)
-      }
-    });
-  } catch (e) { console.error("Error Push:", e); }
 }
