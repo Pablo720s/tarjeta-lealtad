@@ -13,23 +13,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
 
-  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-  <script>
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    window.OneSignalDeferred.push(async function(OneSignal) {
-      // Al no poner 'serviceWorkerPath', OneSignal buscará OneSignalSDKWorker.js automáticamente
-      await OneSignal.init({ 
-        appId: "d58ea2fb-a340-4669-9e14-f8baaf7cba74"
-      });
-      
-      OneSignal.User.PushSubscription.addEventListener("change", function(event) {
-        if (event.current.optedIn) {
-          alert("✅ CONEXIÓN EXITOSA: OneSignal acaba de registrar tu dispositivo en la nube.");
-        }
-      });
-    });
-  </script>
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
@@ -98,7 +81,7 @@
     <header class="w-full flex justify-between px-1">
       <div class="flex items-center gap-2">
         <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span id="cloud-status-text" class="text-[10px] font-tech text-emerald-400 uppercase">Sincronización Activa</span>
+        <span id="cloud-status-text" class="text-[10px] font-tech text-emerald-400 uppercase">Red Propia Activa</span>
       </div>
       <button onclick="logoutCustomer()" class="text-[10px] font-tech text-slate-500 uppercase hover:text-white">Cerrar Sesión</button>
     </header>
@@ -109,7 +92,7 @@
           <h2 class="text-xl font-extrabold text-white" id="client-name-display">Nombre</h2>
           <p class="text-[11px] text-slate-400 font-mono" id="client-phone-display">Teléfono</p>
         </div>
-        <button onclick="activatePush(true)" class="bg-blue-500/20 border border-blue-500/50 text-blue-400 p-2 rounded-xl text-xl active:scale-95" title="Conectar Alertas">🔔</button>
+        <button onclick="activateNativePush()" class="bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 p-2 rounded-xl text-xl active:scale-95" title="Conectar Alertas">🔔</button>
       </div>
 
       <div>
@@ -168,7 +151,7 @@
     </header>
     <div class="titanium-card p-6 rounded-3xl flex flex-col gap-4">
       <input type="tel" id="manual-phone-search" placeholder="Número celular" maxlength="10" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none tracking-widest font-mono">
-      <button id="btn-manual-search" onclick="searchByPhone()" class="w-full bg-white text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl active:scale-95">Buscar en Nube</button>
+      <button id="btn-manual-search" onclick="searchByPhone()" class="w-full bg-white text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl active:scale-95">Buscar en BD</button>
     </div>
   </section>
 
@@ -191,27 +174,32 @@
         <button onclick="redeemRewardWorker()" class="bg-slate-800 text-slate-200 font-tech font-bold text-xs uppercase px-4 py-3.5 rounded-xl border border-white/10 active:scale-95">Canjear</button>
       </div>
       <div class="border-t border-white/10 pt-4 mt-2 flex flex-col gap-2">
-        <span class="text-[9px] font-tech text-slate-400 uppercase">Mensaje Directo a este Cliente</span>
+        <span class="text-[9px] font-tech text-slate-400 uppercase">Mensaje Directo (Web Push)</span>
         <input type="text" id="target-push-title" placeholder="Título" class="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
         <input type="text" id="target-push-body" placeholder="Mensaje" class="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
-        <button onclick="sendPushDirect()" class="w-full bg-white/10 text-white font-tech text-xs uppercase py-2.5 rounded-lg border border-white/10 active:scale-95 mt-1">Notificar a su Celular</button>
+        <button onclick="sendPushDirect()" class="w-full bg-white/10 text-white font-tech text-xs uppercase py-2.5 rounded-lg border border-white/10 active:scale-95 mt-1">Disparar Alerta a su Celular</button>
       </div>
     </div>
   </section>
 
   <section id="view-staff-broadcast" class="hidden w-full max-w-sm flex flex-col gap-4 my-auto">
     <header class="flex justify-between px-1">
-      <span class="text-[10px] font-tech text-emerald-400 uppercase font-semibold">Alerta Global Push</span>
+      <span class="text-[10px] font-tech text-emerald-400 uppercase font-semibold">Alerta Masiva (Web Push)</span>
       <button onclick="showView('view-staff-menu')" class="text-xs font-tech text-slate-400 hover:text-white">Volver</button>
     </header>
     <div class="titanium-card p-6 rounded-3xl flex flex-col gap-4">
       <input type="text" id="broadcast-title" placeholder="Ej. ¡Hoy 2x1 en bebidas!" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none">
       <textarea id="broadcast-body" placeholder="Describe la promoción..." rows="3" class="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none"></textarea>
-      <button onclick="sendBroadcast()" class="w-full bg-emerald-500 text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl active:scale-95">Disparar a Todos</button>
+      <button onclick="sendBroadcast()" class="w-full bg-emerald-500 text-black font-tech font-bold text-xs uppercase py-3.5 rounded-xl active:scale-95">Disparar a Todos los Clientes</button>
     </div>
   </section>
 
   <script>
+    // --- REGISTRO DEL SERVICE WORKER ---
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js');
+    }
+
     const MAX_STAMPS = 6;
     const STAFF_PIN = "123456";
     let qrReaderInstance = null;
@@ -231,24 +219,43 @@
       document.getElementById('in-app-notification').style.top = '-100%';
     }
 
-    function triggerFallbackNotification(title, body) {
-      if(navigator.vibrate) navigator.vibrate([200,100,200]);
-      document.getElementById('in-app-title').innerText = title;
-      document.getElementById('in-app-body').innerText = body;
-      document.getElementById('in-app-notification').style.top = '10px';
+    // --- NUEVO SISTEMA DE SUSCRIPCIÓN NATIVA (VAPID) ---
+    function urlB64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
+      return outputArray;
     }
 
-    function activatePush(forcePrompt = false) {
-      window.OneSignalDeferred.push(async function(OneSignal) {
-        if (currentCustomer && currentCustomer.uid) {
-          await OneSignal.login(currentCustomer.uid);
-        }
-        if (forcePrompt) {
-          await OneSignal.Slidedown.promptPush({ force: true });
-        } else {
-          await OneSignal.Slidedown.promptPush();
-        }
-      });
+    async function activateNativePush() {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        
+        // PEGA TU LLAVE PÚBLICA AQUÍ ABAJO TAMBIÉN ENTRE LAS COMILLAS
+        const applicationServerKey = urlB64ToUint8Array("BAnT5bbpr4oahQev16GudpIJUpg0_3Kgz20jGLFnBsFeK6-_72MtBXvK3M-BruCeTXNWYWEspRrfrUONCJ2OpGM");
+        
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: applicationServerKey
+        });
+        
+        // Enviamos el Token a nuestra base de datos en Cloudflare
+        await fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uid: currentCustomer.uid, action: 'SUBSCRIBE', subscription })
+        });
+        
+        // Guardamos el UID en caché para que el Service Worker sepa a quién buscar
+        const cache = await caches.open('aura-config');
+        await cache.put('/uid', new Response(currentCustomer.uid));
+        
+        alert("✅ SISTEMA PROPIO CONECTADO: Recibirás notificaciones incluso cerrado.");
+      } catch (e) {
+        console.error("Error al suscribir:", e);
+      }
     }
 
     async function goToClientPortal() {
@@ -257,7 +264,7 @@
         currentCustomer = JSON.parse(saved);
         renderCustomerCard();
         startCloudSync();
-        activatePush(); // Llama la solicitud de permisos si ya tenía sesión guardada
+        activateNativePush();
       } else {
         showView('view-register');
       }
@@ -275,7 +282,7 @@
       const secureUid = 'ID-' + btoa(rawPhone).replace(/=/g, '').toUpperCase().substring(0, 16);
 
       try {
-        const res = await fetch(`/api/sync?uid=${secureUid}&nocache=${Date.now()}`);
+        const res = await fetch(`/api/sync?uid=${secureUid}&action=GET_PROFILE`);
         if (res.ok) {
           currentCustomer = (await res.json()).customer;
           currentCustomer.name = name;
@@ -286,7 +293,7 @@
         localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
         renderCustomerCard();
         startCloudSync();
-        activatePush(); // Llama la solicitud de permisos justo al registrarse
+        activateNativePush();
       } catch(e) { alert("Fallo de red."); }
       finally { btn.innerText = "Ingresar al Club"; btn.disabled = false; }
     }
@@ -317,39 +324,24 @@
       syncIntervalId = setInterval(async () => {
         if (!currentCustomer) return;
         try {
-          const res = await fetch(`/api/sync?uid=${currentCustomer.uid}&nocache=${Date.now()}`);
+          const res = await fetch(`/api/sync?uid=${currentCustomer.uid}&action=GET_PROFILE`);
           if (res.ok) {
             document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
-            document.getElementById('cloud-status-text').innerText = "Nube OK";
-            const data = await res.json();
-            const cloudCustomer = data.customer;
+            const cloudCustomer = (await res.json()).customer;
             
-            if (cloudCustomer.stamps !== undefined && cloudCustomer.stamps !== currentCustomer.stamps) {
+            if (cloudCustomer && cloudCustomer.stamps !== currentCustomer.stamps) {
               currentCustomer.stamps = cloudCustomer.stamps;
               localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
               if(navigator.vibrate) navigator.vibrate([100,50]);
               renderCustomerCard();
             }
-
-            const savedPrivId = localStorage.getItem('aura_notif_priv');
-            if (cloudCustomer.pendingNotification && String(cloudCustomer.pendingNotification.id) !== savedPrivId) {
-              localStorage.setItem('aura_notif_priv', String(cloudCustomer.pendingNotification.id));
-              triggerFallbackNotification(cloudCustomer.pendingNotification.title, cloudCustomer.pendingNotification.body);
-            }
-
-            const savedGlobId = localStorage.getItem('aura_notif_glob');
-            if (data.globalNotification && String(data.globalNotification.id) !== savedGlobId) {
-              localStorage.setItem('aura_notif_glob', String(data.globalNotification.id));
-              triggerFallbackNotification(data.globalNotification.title, data.globalNotification.body);
-            }
           }
         } catch (e) {}
-      }, 3000);
+      }, 5000);
     }
     
     function logoutCustomer() {
       localStorage.removeItem('aura_customer_profile');
-      window.OneSignalDeferred.push(function(OneSignal) { OneSignal.logout(); });
       showView('view-portal');
     }
 
@@ -383,12 +375,12 @@
       const searchUid = 'ID-' + btoa(phone).replace(/=/g, '').toUpperCase().substring(0, 16);
       await loadClientIntoActionPanel(searchUid);
       document.getElementById('manual-phone-search').value = '';
-      document.getElementById('btn-manual-search').innerText = "Buscar en Nube";
+      document.getElementById('btn-manual-search').innerText = "Buscar en BD";
     }
 
     async function loadClientIntoActionPanel(uid) {
       try {
-        const res = await fetch(`/api/sync?uid=${uid}&nocache=${Date.now()}`);
+        const res = await fetch(`/api/sync?uid=${uid}&action=GET_PROFILE`);
         if (res.ok) { targetCustomer = (await res.json()).customer; } else throw new Error("No existe");
       } catch(e) { return alert("Cliente no registrado."); }
       showView('view-staff-action');
@@ -414,21 +406,22 @@
       alert("Canjeado.");
     }
 
+    // --- DISPARO DE NOTIFICACIONES ---
     function sendPushDirect() {
       if (!targetCustomer) return;
       const title = document.getElementById('target-push-title').value;
       const body = document.getElementById('target-push-body').value;
       if (!title || !body) return alert("Llena todo");
-      fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uid: targetCustomer.uid, action: 'SEND_NOTIFICATION', notification: { title, body, id: Date.now() } }) })
-      .then(res => { if(res.ok) { alert("¡Notificación enviada!"); document.getElementById('target-push-title').value = ''; document.getElementById('target-push-body').value = ''; } });
+      fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uid: targetCustomer.uid, action: 'SEND_NOTIFICATION', notification: { title, body } }) })
+      .then(res => { if(res.ok) { alert("¡Chispa enviada al celular!"); document.getElementById('target-push-title').value = ''; document.getElementById('target-push-body').value = ''; } });
     }
 
     function sendBroadcast() {
       const title = document.getElementById('broadcast-title').value;
       const body = document.getElementById('broadcast-body').value;
       if (!title || !body) return alert("Llena todo.");
-      fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'BROADCAST', notification: { title, body, id: Date.now() } }) })
-      .then(res => { if(res.ok) { alert("¡Alerta Push Masiva Enviada!"); showView('view-staff-menu'); } });
+      fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'BROADCAST', notification: { title, body } }) })
+      .then(res => { if(res.ok) { alert("¡Alerta Masiva Disparada!"); showView('view-staff-menu'); } });
     }
 
     window.onload = () => { if(localStorage.getItem('aura_customer_profile')) goToClientPortal(); };
