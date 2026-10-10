@@ -92,7 +92,7 @@
           <h2 class="text-xl font-extrabold text-white" id="client-name-display">Nombre</h2>
           <p class="text-[11px] text-slate-400 font-mono" id="client-phone-display">Teléfono</p>
         </div>
-        <button onclick="activateNativePush()" class="bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 p-2 rounded-xl text-xl active:scale-95" title="Conectar Alertas">🔔</button>
+        <button onclick="activateNativePush(false)" class="bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 p-2 rounded-xl text-xl active:scale-95" title="Conectar Alertas">🔔</button>
       </div>
 
       <div>
@@ -195,7 +195,7 @@
   </section>
 
   <script>
-    // --- REGISTRO DEL SERVICE WORKER ---
+    // Inicia el Service Worker nativo
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js');
     }
@@ -229,11 +229,18 @@
       return outputArray;
     }
 
-    async function activateNativePush() {
+    async function activateNativePush(isSilentLogin = false) {
       try {
         const registration = await navigator.serviceWorker.ready;
         
-        // PEGA TU LLAVE PÚBLICA AQUÍ ABAJO TAMBIÉN ENTRE LAS COMILLAS
+        // Comprueba si ya estás suscrito antes de pedir permiso de nuevo
+        const existingSub = await registration.pushManager.getSubscription();
+        if (existingSub) {
+          if (!isSilentLogin) alert("✅ Tu dispositivo ya estaba conectado a las notificaciones.");
+          return; 
+        }
+
+        // PEGA TU LLAVE PÚBLICA AQUÍ ABAJO ENTRE LAS COMILLAS
         const applicationServerKey = urlB64ToUint8Array("BAnT5bbpr4oahQev16GudpIJUpg0_3Kgz20jGLFnBsFeK6-_72MtBXvK3M-BruCeTXNWYWEspRrfrUONCJ2OpGM");
         
         const subscription = await registration.pushManager.subscribe({
@@ -241,18 +248,18 @@
           applicationServerKey: applicationServerKey
         });
         
-        // Enviamos el Token a nuestra base de datos en Cloudflare
         await fetch('/api/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ uid: currentCustomer.uid, action: 'SUBSCRIBE', subscription })
         });
         
-        // Guardamos el UID en caché para que el Service Worker sepa a quién buscar
         const cache = await caches.open('aura-config');
         await cache.put('/uid', new Response(currentCustomer.uid));
         
-        alert("✅ SISTEMA PROPIO CONECTADO: Recibirás notificaciones incluso cerrado.");
+        if (!isSilentLogin) {
+            alert("✅ SISTEMA PROPIO CONECTADO: Recibirás notificaciones incluso cerrado.");
+        }
       } catch (e) {
         console.error("Error al suscribir:", e);
       }
@@ -264,7 +271,7 @@
         currentCustomer = JSON.parse(saved);
         renderCustomerCard();
         startCloudSync();
-        activateNativePush();
+        activateNativePush(true); // Arranque silencioso sin mensajes molestos
       } else {
         showView('view-register');
       }
@@ -293,7 +300,7 @@
         localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
         renderCustomerCard();
         startCloudSync();
-        activateNativePush();
+        activateNativePush(false); // Solo avisa si es registro manual
       } catch(e) { alert("Fallo de red."); }
       finally { btn.innerText = "Ingresar al Club"; btn.disabled = false; }
     }
@@ -406,14 +413,27 @@
       alert("Canjeado.");
     }
 
-    // --- DISPARO DE NOTIFICACIONES ---
     function sendPushDirect() {
       if (!targetCustomer) return;
       const title = document.getElementById('target-push-title').value;
       const body = document.getElementById('target-push-body').value;
       if (!title || !body) return alert("Llena todo");
-      fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uid: targetCustomer.uid, action: 'SEND_NOTIFICATION', notification: { title, body } }) })
-      .then(res => { if(res.ok) { alert("¡Chispa enviada al celular!"); document.getElementById('target-push-title').value = ''; document.getElementById('target-push-body').value = ''; } });
+      
+      document.getElementById('target-push-title').value = 'Enviando...';
+      
+      fetch('/api/sync', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ uid: targetCustomer.uid, action: 'SEND_NOTIFICATION', notification: { title, body } }) 
+      })
+      .then(res => res.json())
+      .then(data => { 
+        // ALERTA DE DIAGNÓSTICO: Esto nos dirá si Apple/Google rechazaron las llaves o la aceptaron.
+        alert("Resultado del Servidor Nativo:\n\n" + data.pushEndpointResponse); 
+        document.getElementById('target-push-title').value = ''; 
+        document.getElementById('target-push-body').value = ''; 
+      })
+      .catch(err => { alert("Error de red: " + err); });
     }
 
     function sendBroadcast() {
@@ -427,5 +447,4 @@
     window.onload = () => { if(localStorage.getItem('aura_customer_profile')) goToClientPortal(); };
   </script>
 </body>
-</html> 
-
+</html>
