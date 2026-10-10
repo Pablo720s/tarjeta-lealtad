@@ -29,6 +29,18 @@
 </head>
 <body class="bg-[#050608] text-slate-100 min-h-screen flex flex-col items-center justify-between p-4">
 
+  <!-- BANNER DE INSTALACIÓN PWA -->
+  <div id="install-banner" class="hidden fixed top-0 left-0 w-full bg-cyan-600 text-white p-3 z-[100] flex justify-between items-center shadow-[0_10px_30px_rgba(6,182,212,0.3)]">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-2xl shadow-inner">📲</div>
+      <div class="flex flex-col">
+        <span class="text-sm font-bold font-tech tracking-wide">Instalar AURA Pass</span>
+        <span class="text-[10px] text-cyan-100">Agrega la app a tu pantalla de inicio</span>
+      </div>
+    </div>
+    <button onclick="installNativeApp()" class="bg-white text-cyan-700 font-extrabold font-tech uppercase tracking-wider text-[10px] px-4 py-2.5 rounded-full active:scale-95 shadow">Instalar</button>
+  </div>
+
   <div id="in-app-notification" class="fixed top-[-100%] left-0 w-full px-4 z-50 pt-4 flex justify-center">
     <div class="bg-cyan-500 text-white w-full max-w-sm rounded-2xl p-4 shadow-[0_10px_40px_rgba(6,182,212,0.5)] border border-cyan-400 flex flex-col gap-1 cursor-pointer" onclick="closeInAppNotification()">
       <div class="flex items-center gap-2">
@@ -197,7 +209,32 @@
   </section>
 
   <script>
-    // Inicia el Service Worker nativo
+    // --- LÓGICA DE INSTALACIÓN PWA (AGREGAR A PANTALLA DE INICIO) ---
+    let deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Evitamos que el navegador muestre su propio mini-banner
+      e.preventDefault();
+      // Guardamos el evento para dispararlo cuando el usuario toque nuestro botón
+      deferredPrompt = e;
+      // Mostramos el banner elegante
+      document.getElementById('install-banner').classList.remove('hidden');
+    });
+
+    async function installNativeApp() {
+      if (deferredPrompt) {
+        // Disparamos la ventana modal nativa del sistema operativo
+        deferredPrompt.prompt();
+        // Esperamos a ver qué elige el usuario
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          document.getElementById('install-banner').classList.add('hidden');
+        }
+        deferredPrompt = null;
+      }
+    }
+
+    // --- INICIALIZACIÓN DEL SERVICE WORKER NATIVO ---
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js');
     }
@@ -221,7 +258,7 @@
       document.getElementById('in-app-notification').style.top = '-100%';
     }
 
-    // --- NUEVO SISTEMA DE SUSCRIPCIÓN NATIVA (VAPID) ---
+    // --- SISTEMA DE SUSCRIPCIÓN NATIVA (VAPID) ---
     function urlB64ToUint8Array(base64String) {
       const padding = '='.repeat((4 - base64String.length % 4) % 4);
       const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
@@ -242,7 +279,7 @@
           return; 
         }
 
-        // PEGA TU LLAVE PÚBLICA AQUÍ ABAJO ENTRE LAS COMILLAS
+        // AQUÍ VA TU LLAVE PÚBLICA INTEGRADA
         const applicationServerKey = urlB64ToUint8Array("BAnT5bbpr4oahQev16GudpIJUpg0_3Kgz20jGLFnBsFeK6-_72MtBXvK3M-BruCeTXNWYWEspRrfrUONCJ2OpGM");
         
         const subscription = await registration.pushManager.subscribe({
@@ -273,7 +310,7 @@
         currentCustomer = JSON.parse(saved);
         renderCustomerCard();
         startCloudSync();
-        activateNativePush(true); // Arranque silencioso sin mensajes molestos
+        activateNativePush(true);
       } else {
         showView('view-register');
       }
@@ -302,7 +339,7 @@
         localStorage.setItem('aura_customer_profile', JSON.stringify(currentCustomer));
         renderCustomerCard();
         startCloudSync();
-        activateNativePush(false); // Solo avisa si es registro manual
+        activateNativePush(false);
       } catch(e) { alert("Fallo de red."); }
       finally { btn.innerText = "Ingresar al Club"; btn.disabled = false; }
     }
@@ -424,7 +461,7 @@
       if (!title || !body) return alert("Llena título y mensaje");
       
       const notification = { title, body };
-      if (image) notification.image = image; // Agregamos la imagen solo si el trabajador llenó el campo
+      if (image) notification.image = image;
       
       document.getElementById('target-push-title').value = 'Enviando...';
       
@@ -451,16 +488,16 @@
       if (!title || !body) return alert("Llena título y mensaje");
       
       const notification = { title, body };
-      if (image) notification.image = image; // Agregamos la imagen al mensaje masivo
+      if (image) notification.image = image;
       
       fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'BROADCAST', notification }) })
       .then(res => { 
         if(res.ok) { 
           alert("¡Alerta Masiva Disparada!"); 
-          showView('view-staff-menu'); 
-          document.getElementById('broadcast-title').value = ''; 
-          document.getElementById('broadcast-body').value = ''; 
-          document.getElementById('broadcast-image').value = ''; 
+          showView('view-staff-menu');
+          document.getElementById('broadcast-title').value = '';
+          document.getElementById('broadcast-body').value = '';
+          document.getElementById('broadcast-image').value = '';
         } 
       });
     }
