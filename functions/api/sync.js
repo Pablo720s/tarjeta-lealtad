@@ -3,13 +3,25 @@ const VAPID_PUBLIC = "BAnT5bbpr4oahQev16GudpIJUpg0_3Kgz20jGLFnBsFeK6-_72MtBXvK3M
 const VAPID_PRIVATE = "YldH1B9DXb5taKwGykHO31HSPbWihtA7TQoUdedDDgQ";
 const CONTACT_EMAIL = "mailto:admin@tu-dominio.com";
 
-// --- MAGIA CRIPTOGRÁFICA 100% NATIVA (Sin librerías externas) ---
+// --- MAGIA CRIPTOGRÁFICA 100% NATIVA ---
 function base64UrlEncode(str) {
   return btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
 function base64UrlEncodeBuffer(buffer) {
   return btoa(String.fromCharCode(...new Uint8Array(buffer))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+// Convertidor seguro de Base64 para evitar errores por falta de padding "="
+function base64UrlToUint8Array(base64Url) {
+  const padding = '='.repeat((4 - base64Url.length % 4) % 4);
+  const base64 = (base64Url + padding).replace(/\-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
 }
 
 async function createVapidJwt(aud, vapidPriv) {
@@ -24,7 +36,8 @@ async function createVapidJwt(aud, vapidPriv) {
   const encodedPayload = base64UrlEncode(JSON.stringify(payload));
   const dataToSign = `${encodedHeader}.${encodedPayload}`;
   
-  const rawHex = atob(vapidPriv.replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+  const rawBytes = base64UrlToUint8Array(vapidPriv);
+  const rawHex = Array.from(rawBytes).map(b => b.toString(16).padStart(2, '0')).join('');
   const prefix = "3041020100301306072a8648ce3d020106082a8648ce3d030107042730250201010420";
   const pkcs8Bytes = new Uint8Array((prefix + rawHex).match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
   
@@ -50,14 +63,20 @@ async function triggerPush(subscription, vapidPub, vapidPriv) {
     const origin = new URL(subscription.endpoint).origin;
     const jwt = await createVapidJwt(origin, vapidPriv);
 
-    await fetch(subscription.endpoint, {
+    const res = await fetch(subscription.endpoint, {
       method: 'POST',
       headers: {
         'Authorization': `vapid t=${jwt}, k=${vapidPub}`,
+        'TTL': '86400', // <-- CABECERA CRÍTICA QUE FALTABA
         'Content-Length': '0'
       }
     });
-  } catch (e) { console.error("Error Push:", e); }
+    const responseText = await res.text();
+    // Devolvemos el texto exacto de lo que respondió Google/Apple
+    return `Código: ${res.status} | Respuesta: ${responseText}`;
+  } catch (e) { 
+    return `Error interno en Cloudflare: ${e.message}`; 
+  }
 }
 
 export async function onRequest(context) {
@@ -102,8 +121,12 @@ export async function onRequest(context) {
     if (reqAction === 'SEND_NOTIFICATION') {
       await env.PUSH_KV.put(`PENDING_${body.uid}`, JSON.stringify(body.notification));
       const subRaw = await env.PUSH_KV.get(`SUB_${body.uid}`);
-      if (subRaw) await triggerPush(JSON.parse(subRaw), VAPID_PUBLIC, VAPID_PRIVATE);
-      return new Response("OK");
+      let pushStatus = "Error: El usuario no tiene suscripción registrada en la BD.";
+      if (subRaw) {
+        pushStatus = await triggerPush(JSON.parse(subRaw), VAPID_PUBLIC, VAPID_PRIVATE);
+      }
+      // Ahora enviamos el estatus de vuelta a la interfaz web
+      return new Response(JSON.stringify({ status: "OK", pushEndpointResponse: pushStatus }), { headers: { 'Content-Type': 'application/json' } });
     }
 
     if (reqAction === 'BROADCAST') {
@@ -113,7 +136,7 @@ export async function onRequest(context) {
         const subRaw = await env.PUSH_KV.get(key.name);
         if (subRaw) await triggerPush(JSON.parse(subRaw), VAPID_PUBLIC, VAPID_PRIVATE);
       }
-      return new Response("OK");
+      return new Response(JSON.stringify({ status: "OK" }), { headers: { 'Content-Type': 'application/json' } });
     }
   }
   return new Response("Bad Request", { status: 400 });
