@@ -13,33 +13,42 @@ self.addEventListener('push', function(event) {
   event.waitUntil(
     (async () => {
       try {
-        // 1. Buscamos el UID del cliente en nuestra memoria interna
         const cache = await caches.open('aura-config');
         const uidReq = await cache.match('/uid');
         let uid = '';
         if (uidReq) uid = await uidReq.text();
 
-        // 2. Nos conectamos a la base de datos para ver qué mensaje nos mandaron
         let url = '/api/sync?action=GET_PENDING';
         if (uid) url += '&uid=' + uid;
         
         const res = await fetch(url);
         const notif = await res.json();
 
-        // 3. Mostramos la notificación en la pantalla
         const title = notif.title || "AURA Club";
         const body = notif.body || "¡Tienes una nueva actualización en tu tarjeta!";
+        const imageUrl = notif.image || null; // Captura la imagen dinámica si el trabajador la envió
 
-        return self.registration.showNotification(title, {
+        // Configuramos la estética base
+        const options = {
           body: body,
-          icon: '/icon.png', // Pon el link a tu logo aquí si tienes uno
-          badge: '/badge.png',
-          vibrate: [200, 100, 200]
-        });
+          icon: '/icon-192.png',  // Reutilizamos la imagen de tu repositorio
+          badge: '/badge.png',    // Esta imagen blanca/transparente es el "mata-Brave" para la barra superior
+          vibrate: [200, 100, 200, 100, 200],
+          requireInteraction: true // Evita que se borre de la pantalla hasta que el cliente la toque
+        };
+
+        // Si el trabajador pegó un link de imagen, se la inyectamos a la notificación
+        if (imageUrl) {
+          options.image = imageUrl;
+        }
+
+        return self.registration.showNotification(title, options);
       } catch (error) {
-        // Fallback de seguridad si falla la red
+        // Fallback de emergencia
         return self.registration.showNotification("AURA Club", {
-          body: "Abre la plataforma para ver tus novedades."
+          body: "Abre la plataforma para ver tus novedades.",
+          icon: '/icon-192.png',
+          badge: '/badge.png'
         });
       }
     })()
@@ -59,4 +68,3 @@ self.addEventListener('notificationclick', function(event) {
     })
   );
 });
-
